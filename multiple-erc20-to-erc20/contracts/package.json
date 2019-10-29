@@ -1,5 +1,5 @@
 {
-  "name": "fuse-multiple-erc-to-erc-bridge",
+  "name": "fuse-multiple-erc20-to-erc20-bridge",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -14,14 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fuseio/fuse-multiple-erc-to-erc-bridge.git"
+    "url": "git+https://github.com/fuseio/fuse-bridge.git"
   },
   "author": "LiorRabin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/fuseio/fuse-multiple-erc-to-erc-bridge/issues"
+    "url": "https://github.com/fuseio/fuse-bridge/issues"
   },
-  "homepage": "https://github.com/fuseio/fuse-multiple-erc-to-erc-bridge#readme",
+  "homepage": "https://github.com/fuseio/fuse-bridge#readme",
   "dependencies": {
     "ganache-cli": "^6.7.0",
     "openzeppelin-solidity": "2.0.1",
