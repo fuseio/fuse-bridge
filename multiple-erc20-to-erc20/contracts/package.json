@@ -1,11 +1,8 @@
 {
-  "name": "fuse-multiple-erc20-to-erc20-bridge",
+  "name": "multiple-erc20-to-erc20-bridge-contracts",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "directories": {
-    "test": "test"
-  },
   "scripts": {
     "compile": "truffle compile",
     "test": "scripts/test.sh",
