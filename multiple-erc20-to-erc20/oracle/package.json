@@ -29,6 +29,7 @@
     "amqplib": "^0.5.5",
     "bignumber.js": "^7.2.1",
     "dotenv": "^5.0.1",
+    "graphql-request": "^1.8.2",
     "http-list-provider": "0.0.5",
     "ioredis": "^3.2.2",
     "lodash": "^4.17.10",

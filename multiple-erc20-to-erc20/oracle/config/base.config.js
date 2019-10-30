@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const { toBN } = require('web3').utils
 const { web3Home, web3Foreign } = require('../src/services/web3')
+const { graphClientHome, graphClientForeign } = require('../src/services/graphClient')
 const { privateKeyToAddress } = require('../src/utils/utils')
 
 const homeErcErcAbi = require('../abis/HomeBridgeErcToErc.abi')
@@ -49,7 +50,8 @@ const homeConfigBasic = {
   eventAbi: homeAbi,
   bridgeAbi: homeAbi,
   pollingInterval: process.env.HOME_POLLING_INTERVAL,
-  web3: web3Home
+  web3: web3Home,
+  graphClient: graphClientHome
 }
 
 const homeConfig = {
@@ -63,7 +65,8 @@ const foreignConfigBasic = {
   eventAbi: foreignAbi,
   bridgeAbi: foreignAbi,
   pollingInterval: process.env.FOREIGN_POLLING_INTERVAL,
-  web3: web3Foreign
+  web3: web3Foreign,
+  graphClient: graphClientForeign
 }
 
 const foreignConfig = {
@@ -75,6 +78,7 @@ const foreignConfig = {
 
 const bridgeMapperConfig = {
   web3: web3Home,
+  graphClient: graphClientHome,
   eventContractAddress: process.env.HOME_BRIDGE_MAPPER_ADDRESS,
   eventAbi: bridgeMapperAbi,
   eventFilter: {},
