@@ -1,5 +1,4 @@
 const BigNumber = require('bignumber.js')
-const promiseLimit = require('promise-limit')
 const promiseRetry = require('promise-retry')
 const Web3 = require('web3')
 const _ = require('lodash')
@@ -98,12 +97,6 @@ function privateKeyToAddress (privateKey) {
     : null
 }
 
-async function processConcurrently (array, f, concurrency) {
-  const limit = promiseLimit(concurrency)
-  const promises = await array.map(obj => limit(async () => f(obj)))
-  return Promise.all(promises)
-}
-
 function replaceLogsWithEvents (receipt, contract) {
   if (_.isArray(receipt.logs)) {
     // decode logs
@@ -146,6 +139,5 @@ module.exports = {
   setIntervalAndRun,
   watchdog,
   privateKeyToAddress,
-  processConcurrently,
   replaceLogsWithEvents
 }

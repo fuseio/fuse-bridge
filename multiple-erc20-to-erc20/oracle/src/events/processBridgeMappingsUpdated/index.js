@@ -10,34 +10,15 @@ const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 function processBridgeMappingsUpdatedBuilder (config) {
   return async function processBridgeMappingsUpdated (bridgesMappings) {
     rootLogger.debug(`Processing ${bridgesMappings.length} BridgeMappingUpdated events`)
-    const jobs = bridgesMappings.map(bridge =>
+    const jobs = bridgesMappings.map(bridgeMapping =>
       limit(async () => {
-        const {
-          key,
-          homeBridge,
-          foreignBridge,
-          homeToken,
-          foreignToken,
-          homeStartBlock,
-          foreignStartBlock
-        } = bridge.returnValues
+        const { key, homeBridge, foreignBridge, homeToken, foreignToken, homeStartBlock, foreignStartBlock } = bridgeMapping
 
         const logger = rootLogger.child({
-          eventTransactionHash: bridge.transactionHash
+          eventTransactionHash: bridgeMapping.txHash
         })
 
-        logger.info(
-          {
-            key,
-            homeBridge,
-            foreignBridge,
-            homeToken,
-            foreignToken,
-            homeStartBlock,
-            foreignStartBlock
-          },
-          `Processing bridge ${bridge.transactionHash}`
-        )
+        logger.info({ key, homeBridge, foreignBridge, homeToken, foreignToken, homeStartBlock, foreignStartBlock }, `Processing bridge ${bridgeMapping.txHash}`)
 
         if (toBN(homeToken).isZero()) {
           return redis.hdel(config.deployedBridgesRedisKey, foreignToken)

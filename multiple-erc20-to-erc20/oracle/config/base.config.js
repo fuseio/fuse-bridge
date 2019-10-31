@@ -7,13 +7,10 @@ const { privateKeyToAddress } = require('../src/utils/utils')
 
 const homeErcErcAbi = require('../abis/HomeBridgeErcToErc.abi')
 const foreignErcErcAbi = require('../abis/ForeignBridgeErcToErc.abi')
-
 const bridgeMapperAbi = require('../abis/BridgeMapper.abi')
 
 const { VALIDATOR_ADDRESS, VALIDATOR_ADDRESS_PRIVATE_KEY } = process.env
 
-const homeAbi = homeErcErcAbi
-const foreignAbi = foreignErcErcAbi
 const id = 'erc-erc-multiple'
 
 let maxProcessingTime = null
@@ -30,50 +27,33 @@ if (!VALIDATOR_ADDRESS_PRIVATE_KEY) {
   throw new Error('Missing VALIDATOR_ADDRESS_PRIVATE_KEY is missing!')
 }
 
-const bridgeConfigBasic = {
-  homeBridgeAbi: homeAbi,
-  foreignBridgeAbi: foreignAbi,
+const bridgeConfig = {
+  homeBridgeAbi: homeErcErcAbi,
+  foreignBridgeAbi: foreignErcErcAbi,
   eventFilter: {},
   validatorAddress: VALIDATOR_ADDRESS || privateKeyToAddress(VALIDATOR_ADDRESS_PRIVATE_KEY),
   maxProcessingTime,
-  deployedBridgesRedisKey: process.env.DEPLOYED_BRIDGES_REDIS_KEY || 'deployed:bridges',
-  concurrency: process.env.MULTIPLE_BRIDGES_CONCURRENCY || 1
+  deployedBridgesRedisKey: process.env.DEPLOYED_BRIDGES_REDIS_KEY || 'deployed:bridges'
 }
 
-const bridgeConfig = {
-  ...bridgeConfigBasic,
-  homeBridgeAddress: process.env.HOME_BRIDGE_ADDRESS,
-  foreignBridgeAddress: process.env.FOREIGN_BRIDGE_ADDRESS
-}
-
-const homeConfigBasic = {
-  eventAbi: homeAbi,
-  bridgeAbi: homeAbi,
+const homeConfig = {
+  eventAbi: homeErcErcAbi,
+  bridgeAbi: homeErcErcAbi,
+  startBlock: toBN(process.env.HOME_START_BLOCK || 0),
+  requiredBlockConfirmations: toBN(process.env.HOME_REQUIRED_BLOCK_CONFIRMATIONS || 1),
   pollingInterval: process.env.HOME_POLLING_INTERVAL,
   web3: web3Home,
   graphClient: graphClientHome
 }
 
-const homeConfig = {
-  ...homeConfigBasic,
-  eventContractAddress: process.env.HOME_BRIDGE_ADDRESS,
-  bridgeContractAddress: process.env.HOME_BRIDGE_ADDRESS,
-  startBlock: toBN(process.env.HOME_START_BLOCK || 0)
-}
-
-const foreignConfigBasic = {
-  eventAbi: foreignAbi,
-  bridgeAbi: foreignAbi,
+const foreignConfig = {
+  eventAbi: foreignErcErcAbi,
+  bridgeAbi: foreignErcErcAbi,
+  startBlock: toBN(process.env.FOREIGN_START_BLOCK || 0),
+  requiredBlockConfirmations: toBN(process.env.FOREIGN_REQUIRED_BLOCK_CONFIRMATIONS || 2),
   pollingInterval: process.env.FOREIGN_POLLING_INTERVAL,
   web3: web3Foreign,
   graphClient: graphClientForeign
-}
-
-const foreignConfig = {
-  ...foreignConfigBasic,
-  eventContractAddress: process.env.FOREIGN_BRIDGE_ADDRESS,
-  bridgeContractAddress: process.env.FOREIGN_BRIDGE_ADDRESS,
-  startBlock: toBN(process.env.FOREIGN_START_BLOCK || 0)
 }
 
 const bridgeMapperConfig = {
@@ -82,17 +62,15 @@ const bridgeMapperConfig = {
   eventContractAddress: process.env.HOME_BRIDGE_MAPPER_ADDRESS,
   eventAbi: bridgeMapperAbi,
   eventFilter: {},
+  requiredBlockConfirmations: toBN(1),
   pollingInterval: process.env.HOME_BRIDGE_MAPPER_POLLING_INTERVAL,
   startBlock: toBN(process.env.HOME_BRIDGE_MAPPER_START_BLOCK || 0),
   maxProcessingTime
 }
 
 module.exports = {
-  bridgeConfigBasic,
   bridgeConfig,
-  homeConfigBasic,
   homeConfig,
-  foreignConfigBasic,
   foreignConfig,
   bridgeMapperConfig,
   id

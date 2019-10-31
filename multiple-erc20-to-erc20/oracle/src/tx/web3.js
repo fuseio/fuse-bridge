@@ -35,40 +35,8 @@ async function getChainId (web3) {
   }
 }
 
-async function getRequiredBlockConfirmations (contract) {
-  try {
-    const contractAddress = contract.options.address
-    logger.debug({ contractAddress }, 'Getting required block confirmations')
-    const requiredBlockConfirmations = await contract.methods.requiredBlockConfirmations().call()
-    logger.debug(
-      { contractAddress, requiredBlockConfirmations },
-      'Required block confirmations obtained'
-    )
-    return requiredBlockConfirmations
-  } catch (e) {
-    throw new Error('Required block confirmations cannot be obtained')
-  }
-}
-
-async function getEvents ({ contract, event, fromBlock, toBlock, filter }) {
-  try {
-    const contractAddress = contract.options.address
-    logger.info(
-      { contractAddress, event, fromBlock: fromBlock.toString(), toBlock: toBlock.toString(), filter },
-      'Getting past events'
-    )
-    const pastEvents = await contract.getPastEvents(event, { fromBlock, toBlock, filter })
-    logger.debug({ contractAddress, event, count: pastEvents.length }, 'Past events obtained')
-    return pastEvents
-  } catch (e) {
-    throw new Error(`${event} events cannot be obtained`)
-  }
-}
-
 module.exports = {
   getNonce,
   getBlockNumber,
-  getChainId,
-  getRequiredBlockConfirmations,
-  getEvents
+  getChainId
 }

@@ -23,37 +23,35 @@ let validatorContract = null
 function processSignatureRequestsBuilder (config) {
   return async function processSignatureRequests (
     signatureRequests,
-    homeBridgeAddress,
-    foreignBridgeAddress
+    deployedBridges
   ) {
-    const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
     const txToSend = []
-
-    if (expectedMessageLength === null) {
-      expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
-    }
-
-    if (validatorContract === null) {
-      rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await homeBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
-
-      validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
-    }
-
     rootLogger.debug(`Processing ${signatureRequests.length} SignatureRequest events`)
     const callbacks = signatureRequests.map(signatureRequest =>
       limit(async () => {
-        const { recipient, value, data } = signatureRequest.returnValues
+        const { recipient, value, data, bridgeAddress, txHash } = signatureRequest
 
         const logger = rootLogger.child({
-          eventTransactionHash: signatureRequest.transactionHash
+          eventTransactionHash: txHash
         })
 
-        logger.info(
-          { sender: recipient, value, data },
-          `Processing signatureRequest ${signatureRequest.transactionHash}`
-        )
+        logger.info({ sender: recipient, value, data }, `Processing signatureRequest ${txHash}`)
+
+        const homeBridgeAddress = bridgeAddress
+        const foreignBridgeAddress = deployedBridges.filter(d => d.homeBridge === homeBridgeAddress).map(d => d.foreignBridge)[0]
+
+        const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
+
+        if (expectedMessageLength === null) {
+          expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
+        }
+
+        if (validatorContract === null) {
+          rootLogger.debug('Getting validator contract address')
+          const validatorContractAddress = await homeBridge.methods.validatorContract().call()
+          rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
+          validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
+        }
 
         let r = recipient
         if (data && web3Home.utils.isAddress(data)) {
@@ -63,7 +61,7 @@ function processSignatureRequestsBuilder (config) {
         const message = createMessage({
           recipient: r,
           value,
-          transactionHash: signatureRequest.transactionHash,
+          transactionHash: txHash,
           bridgeAddress: foreignBridgeAddress,
           expectedMessageLength
         })
@@ -84,21 +82,15 @@ function processSignatureRequestsBuilder (config) {
           logger.debug({ gasEstimate }, 'Gas estimated')
         } catch (e) {
           if (e instanceof HttpListProviderError) {
-            throw new Error(
-              'RPC Connection Error: submitSignature Gas Estimate cannot be obtained.'
-            )
+            throw new Error('RPC Connection Error: submitSignature Gas Estimate cannot be obtained.')
           } else if (e instanceof InvalidValidatorError) {
             logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
             process.exit(EXIT_CODES.INCOMPATIBILITY)
           } else if (e instanceof AlreadySignedError) {
-            logger.info(`Already signed signatureRequest ${signatureRequest.transactionHash}`)
+            logger.info(`Already signed signatureRequest ${txHash}`)
             return
           } else if (e instanceof AlreadyProcessedError) {
-            logger.info(
-              `signatureRequest ${
-                signatureRequest.transactionHash
-              } was already processed by other validators`
-            )
+            logger.info(`signatureRequest ${txHash} was already processed by other validators`)
             return
           } else {
             logger.error(e, 'Unknown error while processing transaction')
@@ -113,7 +105,7 @@ function processSignatureRequestsBuilder (config) {
         txToSend.push({
           data: txData,
           gasEstimate,
-          transactionReference: signatureRequest.transactionHash,
+          transactionReference: txHash,
           to: homeBridgeAddress
         })
       })

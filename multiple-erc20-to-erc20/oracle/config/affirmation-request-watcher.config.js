@@ -5,8 +5,8 @@ const erc20Abi = require('../abis/ERC20.abi')
 const id = `${baseConfig.id}-affirmation-request`
 
 module.exports = {
-  ...baseConfig.bridgeConfigeBasic,
-  ...baseConfig.foreignConfigBasic,
+  ...baseConfig.bridgeConfige,
+  ...baseConfig.foreignConfig,
   event: 'Transfer',
   eventAbi: erc20Abi,
   queue: 'home',

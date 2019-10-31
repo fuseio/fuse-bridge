@@ -20,50 +20,38 @@ let validatorContract = null
 function processCollectedSignaturesBuilder (config) {
   return async function processCollectedSignatures (
     signatures,
-    homeBridgeAddress,
-    foreignBridgeAddress
+    deployedBridges
   ) {
-    const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
-
-    const foreignBridge = new web3Foreign.eth.Contract(
-      config.foreignBridgeAbi,
-      foreignBridgeAddress
-    )
-
     const txToSend = []
-
-    if (validatorContract === null) {
-      rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await foreignBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
-
-      validatorContract = new web3Foreign.eth.Contract(
-        bridgeValidatorsABI,
-        validatorContractAddress
-      )
-    }
-
     rootLogger.debug(`Processing ${signatures.length} CollectedSignatures events`)
-    const callbacks = signatures.map(colSignature =>
+    const callbacks = signatures.map(sig =>
       limit(async () => {
-        const {
-          authorityResponsibleForRelay,
-          messageHash,
-          NumberOfCollectedSignatures
-        } = colSignature.returnValues
+        const { authorityResponsibleForRelay, messageHash, numberOfCollectedSignatures, bridgeAddress, txHash } = sig
 
         const logger = rootLogger.child({
-          eventTransactionHash: colSignature.transactionHash
+          eventTransactionHash: txHash
         })
 
-        if (
-          authorityResponsibleForRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)
-        ) {
-          logger.info(`Processing CollectedSignatures ${colSignature.transactionHash}`)
+        if (authorityResponsibleForRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
+          logger.info(`Processing CollectedSignatures ${txHash}`)
+
+          const homeBridgeAddress = bridgeAddress
+          const foreignBridgeAddress = deployedBridges.filter(d => d.homeBridge === homeBridgeAddress).map(d => d.foreignBridge)[0]
+
+          const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
+          const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
+
+          if (validatorContract === null) {
+            rootLogger.debug('Getting validator contract address')
+            const validatorContractAddress = await foreignBridge.methods.validatorContract().call()
+            rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
+            validatorContract = new web3Foreign.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
+          }
+
           const message = await homeBridge.methods.message(messageHash).call()
 
           const requiredSignatures = []
-          requiredSignatures.length = NumberOfCollectedSignatures
+          requiredSignatures.length = numberOfCollectedSignatures
           requiredSignatures.fill(0)
 
           const [v, r, s] = [[], [], []]
@@ -89,21 +77,16 @@ function processCollectedSignaturesBuilder (config) {
               r,
               s,
               message,
-              numberOfCollectedSignatures: NumberOfCollectedSignatures
+              NumberOfCollectedSignatures: numberOfCollectedSignatures
             })
             logger.debug({ gasEstimate }, 'Gas estimated')
           } catch (e) {
             if (e instanceof HttpListProviderError) {
-              throw new Error(
-                'RPC Connection Error: submitSignature Gas Estimate cannot be obtained.'
-              )
+              throw new Error('RPC Connection Error: submitSignature Gas Estimate cannot be obtained.')
             } else if (e instanceof AlreadyProcessedError) {
-              logger.info(`Already processed CollectedSignatures ${colSignature.transactionHash}`)
+              logger.info(`Already processed CollectedSignatures ${txHash}`)
               return
-            } else if (
-              e instanceof IncompatibleContractError ||
-              e instanceof InvalidValidatorError
-            ) {
+            } else if (e instanceof IncompatibleContractError || e instanceof InvalidValidatorError) {
               logger.error(`The message couldn't be processed; skipping: ${e.message}`)
               return
             } else {
@@ -115,15 +98,11 @@ function processCollectedSignaturesBuilder (config) {
           txToSend.push({
             data,
             gasEstimate,
-            transactionReference: colSignature.transactionHash,
+            transactionReference: txHash,
             to: foreignBridgeAddress
           })
         } else {
-          logger.info(
-            `Validator not responsible for relaying CollectedSignatures ${
-              colSignature.transactionHash
-            }`
-          )
+          logger.info(`Validator not responsible for relaying CollectedSignatures ${txHash}`)
         }
       })
     )

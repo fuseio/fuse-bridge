@@ -3,8 +3,8 @@ const baseConfig = require('./base.config')
 const id = `${baseConfig.id}-collected-signatures`
 
 module.exports = {
-  ...baseConfig.bridgeConfigBasic,
-  ...baseConfig.homeConfigBasic,
+  ...baseConfig.bridgeConfig,
+  ...baseConfig.homeConfig,
   event: 'CollectedSignatures',
   queue: 'foreign',
   name: `watcher-${id}`,
