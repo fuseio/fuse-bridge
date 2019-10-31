@@ -1,0 +1,60 @@
+{
+  "name": "native-to-erc20-bridge-oracle",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "watcher:signature-request": "./scripts/start-worker.sh watcher signature-request-watcher",
+    "watcher:collected-signatures": "./scripts/start-worker.sh watcher collected-signatures-watcher",
+    "watcher:affirmation-request": "./scripts/start-worker.sh watcher affirmation-request-watcher",
+    "watcher:rewarded-on-cycle": "./scripts/start-worker.sh watcher rewarded-on-cycle-watcher",
+    "watcher:initiate-change": "./scripts/start-worker.sh watcher initiate-change-watcher",
+    "sender:home": "./scripts/start-worker.sh sender home-sender",
+    "sender:foreign": "./scripts/start-worker.sh sender foreign-sender",
+    "dev": "concurrently -n 'watcher:signature-request,watcher:collected-signatures,watcher:affirmation-request,watcher:rewarded-on-cycle,watcher:initiate-change,sender:home,sender:foreign' -c 'red,green,yellow,blue,magenta,cyan,gray' 'npm run watcher:signature-request' 'npm run watcher:collected-signatures' 'npm run watcher:affirmation-request' 'npm run watcher:rewarded-on-cycle' 'npm run watcher:initiate-change' 'npm run sender:home' 'npm run sender:foreign'",
+    "lint": "./node_modules/.bin/standard",
+    "test": "NODE_ENV=test mocha",
+    "postinstall": "mkdir -p logs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fuseio/fuse-bridge.git"
+  },
+  "author": "LiorRabin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fuseio/fuse-bridge/issues"
+  },
+  "homepage": "https://github.com/fuseio/fuse-bridge#readme",
+  "dependencies": {
+    "amqp-connection-manager": "^2.0.0",
+    "amqplib": "^0.5.5",
+    "bignumber.js": "^7.2.1",
+    "dotenv": "^5.0.1",
+    "ethereumjs-wallet": "^0.6.3",
+    "http-list-provider": "0.0.5",
+    "ioredis": "^3.2.2",
+    "lodash": "^4.17.10",
+    "node-fetch": "^2.1.2",
+    "pino": "^4.17.3",
+    "pino-pretty": "^2.0.1",
+    "promise-limit": "^2.7.0",
+    "promise-retry": "^1.1.1",
+    "redlock": "^3.1.2",
+    "web3": "^1.0.0-beta.34",
+    "web3-utils": "^1.0.0-beta.34"
+  },
+  "devDependencies": {
+    "bn-chai": "^1.0.1",
+    "chai": "^4.2.0",
+    "chai-as-promised": "^7.1.1",
+    "concurrently": "^5.0.0",
+    "proxyquire": "^2.1.3",
+    "sinon": "^7.5.0",
+    "standard": "^14.3.1"
+  },
+  "standard": {
+    "ignore": [
+      "/test/*"
+    ]
+  }
+}

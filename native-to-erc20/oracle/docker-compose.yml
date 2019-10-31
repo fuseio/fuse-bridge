@@ -1,0 +1,203 @@
+version: '2.4'
+services:
+  rabbit:
+    cpus: 0.3
+    mem_limit: 500m
+    environment: ['RABBITMQ_NODENAME=node@rabbit']
+    hostname: rabbit
+    image: rabbitmq:3
+    container_name: fuseoracle-rabbitmq
+    networks:
+      - net_rabbit_bridge_request
+      - net_rabbit_bridge_collected
+      - net_rabbit_bridge_affirmation
+      - net_rabbit_bridge_initiate_change
+      - net_rabbit_bridge_rewarded_on_cycle
+      - net_rabbit_bridge_senderhome
+      - net_rabbit_bridge_senderforeign
+    restart: unless-stopped
+    volumes: ['~/bridge_data/rabbitmq:/var/lib/rabbitmq/mnesia']
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  redis:
+    cpus: 0.1
+    mem_limit: 500m
+    command: [redis-server, --appendonly, 'yes']
+    hostname: redis
+    image: redis:4
+    container_name: fuseoracle-redis
+    networks:
+      - net_db_bridge_request
+      - net_db_bridge_collected
+      - net_db_bridge_affirmation
+      - net_db_bridge_initiate_change
+      - net_db_bridge_rewarded_on_cycle
+      - net_db_bridge_senderhome
+      - net_db_bridge_senderforeign
+    restart: unless-stopped
+    volumes: ['~/bridge_data/redis:/data']
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  bridge_request:
+    cpus: 0.1
+    mem_limit: 500m
+    image: fusenet/oracle
+    container_name: fuseoracle-signature-request
+    env_file: ./.env
+    environment:
+      - NPM_SCRIPT=watcher:signature-request
+    restart: unless-stopped
+    networks:
+      - net_db_bridge_request
+      - net_rabbit_bridge_request
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  bridge_collected:
+    cpus: 0.1
+    mem_limit: 500m
+    image: fusenet/oracle
+    container_name: fuseoracle-collected-signatures
+    env_file: ./.env
+    environment:
+      - NPM_SCRIPT=watcher:collected-signatures
+    restart: unless-stopped
+    networks:
+      - net_db_bridge_collected
+      - net_rabbit_bridge_collected
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  bridge_affirmation:
+    cpus: 0.1
+    mem_limit: 500m
+    image: fusenet/oracle
+    container_name: fuseoracle-affirmation-request
+    env_file: ./.env
+    environment:
+      - NPM_SCRIPT=watcher:affirmation-request
+    restart: unless-stopped
+    networks:
+      - net_db_bridge_affirmation
+      - net_rabbit_bridge_affirmation
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  bridge_initiate_change:
+    cpus: 0.1
+    mem_limit: 500m
+    image: fusenet/oracle
+    container_name: fuseoracle-initiate-change
+    env_file: ./.env
+    environment:
+      - NPM_SCRIPT=watcher:initiate-change
+    restart: unless-stopped
+    networks:
+      - net_db_bridge_initiate_change
+      - net_rabbit_bridge_initiate_change
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  bridge_rewarded_on_cycle:
+    cpus: 0.1
+    mem_limit: 500m
+    image: fusenet/oracle
+    container_name: fuseoracle-rewarded-on-cycle
+    env_file: ./.env
+    environment:
+      - NPM_SCRIPT=watcher:rewarded-on-cycle
+    restart: unless-stopped
+    networks:
+      - net_db_bridge_rewarded_on_cycle
+      - net_rabbit_bridge_rewarded_on_cycle
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  bridge_senderhome:
+    cpus: 0.1
+    mem_limit: 500m
+    image: fusenet/oracle
+    container_name: fuseoracle-sender-home
+    env_file: ./.env
+    environment:
+      - NPM_SCRIPT=sender:home
+    restart: unless-stopped
+    networks:
+      - net_db_bridge_senderhome
+      - net_rabbit_bridge_senderhome
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+  bridge_senderforeign:
+    cpus: 0.1
+    mem_limit: 500m
+    image: fusenet/oracle
+    container_name: fuseoracle-sender-foreign
+    env_file: ./.env
+    environment:
+      - NPM_SCRIPT=sender:foreign
+    restart: unless-stopped
+    networks:
+      - net_db_bridge_senderforeign
+      - net_rabbit_bridge_senderforeign
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "100"
+        compress: "true"
+networks:
+  net_db_bridge_request:
+    driver: bridge
+  net_db_bridge_collected:
+    driver: bridge
+  net_db_bridge_affirmation:
+    driver: bridge
+  net_db_bridge_initiate_change:
+    driver: bridge
+  net_db_bridge_rewarded_on_cycle:
+    driver: bridge
+  net_db_bridge_senderhome:
+    driver: bridge
+  net_db_bridge_senderforeign:
+    driver: bridge
+  net_rabbit_bridge_request:
+    driver: bridge
+  net_rabbit_bridge_collected:
+    driver: bridge
+  net_rabbit_bridge_affirmation:
+    driver: bridge
+  net_rabbit_bridge_initiate_change:
+    driver: bridge
+  net_rabbit_bridge_rewarded_on_cycle:
+    driver: bridge
+  net_rabbit_bridge_senderhome:
+    driver: bridge
+  net_rabbit_bridge_senderforeign:
+    driver: bridge
