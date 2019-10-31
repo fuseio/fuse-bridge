@@ -10,7 +10,7 @@ const ForeignErcToErcBridge = artifacts.require("ForeignBridgeErcToErc.sol")
 const BridgeValidators = artifacts.require("BridgeValidators.sol")
 
 const { ERROR_MSG, ZERO_ADDRESS } = require('./setup')
-const { toBufferStripPrefix } = require('./helpers/helpers')
+const { toBufferStripPrefix } = require('./helpers')
 
 const minPerTx = web3.toBigNumber(web3.toWei(0.01, "ether"))
 const requireBlockConfirmations = 8

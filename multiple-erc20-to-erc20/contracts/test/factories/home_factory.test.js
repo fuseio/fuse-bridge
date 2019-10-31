@@ -4,7 +4,7 @@ const BridgeValidators = artifacts.require("BridgeValidators.sol")
 const ERC677BridgeToken = artifacts.require("ERC677BridgeToken.sol")
 
 const {ERROR_MSG, ZERO_ADDRESS, INVALID_ARGUMENTS} = require('../setup')
-const {getEventFromLogs} = require('../helpers/helpers')
+const {getEventFromLogs} = require('../helpers')
 const halfEther = web3.toBigNumber(web3.toWei(0.5, "ether"))
 const quarterEther = web3.toBigNumber(web3.toWei(0.25, "ether"))
 const requiredSignatures = 1

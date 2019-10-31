@@ -1,5 +1,5 @@
 const ethUtils = require('ethereumjs-util')
-const {getEventFromLogs, toBufferStripPrefix} = require('../helpers/helpers')
+const {getEventFromLogs, toBufferStripPrefix} = require('../helpers')
 
 const BridgeMapper = artifacts.require("BridgeMapper.sol")
 const ForeignBridgeFactory = artifacts.require("ForeignBridgeFactory.sol")
