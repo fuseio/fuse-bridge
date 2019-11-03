@@ -58,7 +58,7 @@ function processCollectedSignaturesBuilder (config) {
         })
 
         if (
-          authorityResponsibleForRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)
+          web3Home.utils.toChecksumAddress(authorityResponsibleForRelay) === web3Home.utils.toChecksumAddress(config.validatorAddress)
         ) {
           logger.info(`Processing CollectedSignatures ${colSignature.transactionHash}`)
           const message = await homeBridge.methods.message(messageHash).call()
