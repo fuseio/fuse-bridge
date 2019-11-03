@@ -32,7 +32,7 @@ function processCollectedSignaturesBuilder (config) {
           eventTransactionHash: txHash
         })
 
-        if (authorityResponsibleForRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
+        if (web3Home.utils.toChecksumAddress(authorityResponsibleForRelay) === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
           logger.info(`Processing CollectedSignatures ${txHash}`)
 
           const homeBridgeAddress = bridgeAddress
