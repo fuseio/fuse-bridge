@@ -11,7 +11,7 @@ services:
       - net_rabbit_bridge_request
       - net_rabbit_bridge_collected
       - net_rabbit_bridge_affirmation
-      - net_rabbit_bridge_deployed
+      - net_rabbit_deployed_bridges
       - net_rabbit_bridge_senderhome
       - net_rabbit_bridge_senderforeign
     restart: unless-stopped
@@ -33,7 +33,7 @@ services:
       - net_db_bridge_request
       - net_db_bridge_collected
       - net_db_bridge_affirmation
-      - net_db_bridge_deployed
+      - net_db_deployed_bridges
       - net_db_bridge_senderhome
       - net_db_bridge_senderforeign
     restart: unless-stopped
@@ -47,7 +47,7 @@ services:
   bridge_request:
     cpus: 0.1
     mem_limit: 500m
-    image: fusenet/oracle
+    image: fusenet/multiple-erc20-to-erc20-oracle
     container_name: fuseoracle-signature-request
     env_file: ./.env
     environment:
@@ -65,7 +65,7 @@ services:
   bridge_collected:
     cpus: 0.1
     mem_limit: 500m
-    image: fusenet/oracle
+    image: fusenet/multiple-erc20-to-erc20-oracle
     container_name: fuseoracle-collected-signatures
     env_file: ./.env
     environment:
@@ -83,7 +83,7 @@ services:
   bridge_affirmation:
     cpus: 0.1
     mem_limit: 500m
-    image: fusenet/oracle
+    image: fusenet/multiple-erc20-to-erc20-oracle
     container_name: fuseoracle-affirmation-request
     env_file: ./.env
     environment:
@@ -98,18 +98,18 @@ services:
         max-size: "10m"
         max-file: "100"
         compress: "true"
-  bridge_deployed:
+  deployed_bridges:
     cpus: 0.1
     mem_limit: 500m
-    image: fusenet/oracle
+    image: fusenet/multiple-erc20-to-erc20-oracle
     container_name: fuseoracle-deployed-bridges
     env_file: ./.env
     environment:
       - NPM_SCRIPT=watcher:deployed-bridges
     restart: unless-stopped
     networks:
-      - net_db_bridge_deployed
-      - net_rabbit_bridge_deployed
+      - net_db_deployed_bridges
+      - net_rabbit_deployed_bridges
     logging:
       driver: "json-file"
       options:
@@ -119,7 +119,7 @@ services:
   bridge_senderhome:
     cpus: 0.1
     mem_limit: 500m
-    image: fusenet/oracle
+    image: fusenet/multiple-erc20-to-erc20-oracle
     container_name: fuseoracle-sender-home
     env_file: ./.env
     environment:
@@ -137,7 +137,7 @@ services:
   bridge_senderforeign:
     cpus: 0.1
     mem_limit: 500m
-    image: fusenet/oracle
+    image: fusenet/multiple-erc20-to-erc20-oracle
     container_name: fuseoracle-sender-foreign
     env_file: ./.env
     environment:
@@ -159,7 +159,7 @@ networks:
     driver: bridge
   net_db_bridge_affirmation:
     driver: bridge
-  net_db_bridge_deployed:
+  net_db_deployed_bridges:
     driver: bridge
   net_db_bridge_senderhome:
     driver: bridge
@@ -171,7 +171,7 @@ networks:
     driver: bridge
   net_rabbit_bridge_affirmation:
     driver: bridge
-  net_rabbit_bridge_deployed:
+  net_rabbit_deployed_bridges:
     driver: bridge
   net_rabbit_bridge_senderhome:
     driver: bridge
