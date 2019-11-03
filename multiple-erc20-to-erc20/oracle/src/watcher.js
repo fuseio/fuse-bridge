@@ -85,6 +85,10 @@ async function main ({ sendToQueue }) {
           const { bridgeMappings } = await graphClient.request(query)
           logger.info(`Found ${bridgeMappings.length} ${config.event} events`)
           await processBridgeMappingsUpdated(bridgeMappings)
+          if (bridgeMappings.length > 0) {
+            logger.debug({ lastProcessedBlock: lastBlockToProcess.toString() }, 'Updating last processed block')
+            await updateLastProcessedBlock(lastBlockRedisKey, lastBlockToProcess)
+          }
           break
         }
         case 'erc-erc-multiple-signature-request': {
@@ -102,6 +106,10 @@ async function main ({ sendToQueue }) {
           logger.info('Transactions to send:', job.length)
           if (job.length) {
             await sendToQueue(job)
+          }
+          if (userRequestForSignatureEvents.length > 0) {
+            logger.debug({ lastProcessedBlock: lastBlockToProcess.toString() }, 'Updating last processed block')
+            await updateLastProcessedBlock(lastBlockRedisKey, lastBlockToProcess)
           }
           break
         }
@@ -121,6 +129,10 @@ async function main ({ sendToQueue }) {
           if (job.length) {
             await sendToQueue(job)
           }
+          if (collectedSignaturesEvents.length > 0) {
+            logger.debug({ lastProcessedBlock: lastBlockToProcess.toString() }, 'Updating last processed block')
+            await updateLastProcessedBlock(lastBlockRedisKey, lastBlockToProcess)
+          }
           break
         }
         case 'erc-erc-multiple-affirmation-request': {
@@ -139,13 +151,15 @@ async function main ({ sendToQueue }) {
           if (job.length) {
             await sendToQueue(job)
           }
+          if (transferEvents.length > 0) {
+            logger.debug({ lastProcessedBlock: lastBlockToProcess.toString() }, 'Updating last processed block')
+            await updateLastProcessedBlock(lastBlockRedisKey, lastBlockToProcess)
+          }
           break
         }
         default:
           throw new Error(`Unknown config id ${config.id}`)
       }
-      logger.debug({ lastProcessedBlock: lastBlockToProcess.toString() }, 'Updating last processed block')
-      await updateLastProcessedBlock(lastBlockRedisKey, lastBlockToProcess)
     }
   } catch (e) {
     logger.error(e)
