@@ -15,3 +15,5 @@ mkdir flats
 
 ./node_modules/.bin/truffle-flattener contracts/upgradeable_contracts/factories/ForeignBridgeFactory.sol > flats/ForeignBridgeFactory_flat.sol
 ./node_modules/.bin/truffle-flattener contracts/upgradeable_contracts/factories/HomeBridgeFactory.sol > flats/HomeBridgeFactory_flat.sol
+
+./node_modules/.bin/truffle-flattener contracts/ERC677BridgeToken.sol > flats/ERC677BridgeToken_flat.sol

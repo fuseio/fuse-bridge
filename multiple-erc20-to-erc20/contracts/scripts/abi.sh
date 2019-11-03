@@ -15,3 +15,5 @@ mkdir abis
 
 ./node_modules/node-jq/bin/jq '.abi' build/contracts/ForeignBridgeFactory.json > abis/ForeignBridgeFactory.abi.json
 ./node_modules/node-jq/bin/jq '.abi' build/contracts/HomeBridgeFactory.json > abis/HomeBridgeFactory.abi.json
+
+./node_modules/node-jq/bin/jq '.abi' build/contracts/ERC677BridgeToken.json > abis/ERC677BridgeToken.abi.json
