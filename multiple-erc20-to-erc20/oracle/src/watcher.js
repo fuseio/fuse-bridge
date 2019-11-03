@@ -79,7 +79,7 @@ async function main ({ sendToQueue }) {
       const fromBlock = lastProcessedBlock.add(ONE)
       const toBlock = lastBlockToProcess
       switch (config.id) {
-        case 'erc-erc-multiple-bridge-deployed': {
+        case 'erc-erc-multiple-deployed-bridges': {
           const query = `{bridgeMappings(first: ${graphMaxResults}, where: {blockNumber_gte: ${fromBlock}, blockNumber_lte: ${toBlock}}) {id, blockNumber, txHash, key, homeBridge, homeToken, homeStartBlock, foreignBridge, foreignToken, foreignStartBlock}}`
           logger.debug(`Query: ${query.replace('\n', '')}`)
           const { bridgeMappings } = await graphClient.request(query)

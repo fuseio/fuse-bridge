@@ -1,6 +1,6 @@
 const baseConfig = require('./base.config')
 
-const id = `${baseConfig.id}-bridge-deployed`
+const id = `${baseConfig.id}-deployed-bridges`
 
 module.exports = {
   ...baseConfig.bridgeConfig,

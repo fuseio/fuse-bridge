@@ -102,10 +102,10 @@ services:
     cpus: 0.1
     mem_limit: 500m
     image: fusenet/oracle
-    container_name: fuseoracle-bridge-deployed
+    container_name: fuseoracle-deployed-bridges
     env_file: ./.env
     environment:
-      - NPM_SCRIPT=watcher:bridge-deployed
+      - NPM_SCRIPT=watcher:deployed-bridges
     restart: unless-stopped
     networks:
       - net_db_bridge_deployed
