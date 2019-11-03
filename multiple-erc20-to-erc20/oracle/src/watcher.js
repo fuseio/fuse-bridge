@@ -89,9 +89,13 @@ async function main ({ sendToQueue }) {
         }
         case 'erc-erc-multiple-signature-request': {
           const deployedBridges = await getDeployedBridges()
+          if (!deployedBridges || deployedBridges.length === 0) {
+            return logger.warn('No deployed bridges found')
+          }
           logger.debug(`Found ${deployedBridges.length} deployed bridges`)
           const homeBridges = deployedBridges.map(d => d.homeBridge)
           const query = `{userRequestForSignatureEvents(first: ${graphMaxResults}, where:{blockNumber_gte: ${fromBlock}, blockNumber_lte: ${toBlock}, bridgeAddress_in: ${JSON.stringify(homeBridges)}}) {id, blockNumber, txHash, bridgeAddress, tokenAddress, recipient, value, data}}`
+          logger.debug(`Query: ${query.replace('\n', '')}`)
           const { userRequestForSignatureEvents } = await graphClient.request(query)
           logger.info(`Found ${userRequestForSignatureEvents.length} ${config.event} events`)
           const job = await processSignatureRequests(userRequestForSignatureEvents, deployedBridges)
@@ -103,9 +107,13 @@ async function main ({ sendToQueue }) {
         }
         case 'erc-erc-multiple-collected-signatures': {
           const deployedBridges = await getDeployedBridges()
+          if (!deployedBridges || deployedBridges.length === 0) {
+            return logger.warn('No deployed bridges found')
+          }
           logger.debug(`Found ${deployedBridges.length} deployed bridges`)
           const homeBridges = deployedBridges.map(d => d.homeBridge)
           const query = `{collectedSignaturesEvents(first: ${graphMaxResults}, where:{blockNumber_gte: ${fromBlock}, blockNumber_lte: ${toBlock}, bridgeAddress_in: ${JSON.stringify(homeBridges)}}) {id, blockNumber, txHash, bridgeAddress, authorityResponsibleForRelay, messageHash, numberOfCollectedSignatures}}`
+          logger.debug(`Query: ${query.replace('\n', '')}`)
           const { collectedSignaturesEvents } = await graphClient.request(query)
           logger.info(`Found ${collectedSignaturesEvents.length} ${config.event} events`)
           const job = await processCollectedSignatures(collectedSignaturesEvents, deployedBridges)
@@ -117,9 +125,20 @@ async function main ({ sendToQueue }) {
         }
         case 'erc-erc-multiple-affirmation-request': {
           const deployedBridges = await getDeployedBridges()
+          if (!deployedBridges || deployedBridges.length === 0) {
+            return logger.warn('No deployed bridges found')
+          }
           logger.debug(`Found ${deployedBridges.length} deployed bridges`)
           const foreignBridges = deployedBridges.map(d => d.foreignBridge)
-          // TODO
+          const query = `{transferEvents(first: ${graphMaxResults}, where:{blockNumber_gte: ${fromBlock}, blockNumber_lte: ${toBlock}, to_in: ${JSON.stringify(foreignBridges)}}) {id, blockNumber, txHash, from, to, value, data, tokenAddress}}`
+          logger.debug(`Query: ${query.replace('\n', '')}`)
+          const { transferEvents } = await graphClient.request(query)
+          logger.info(`Found ${transferEvents.length} ${config.event} events`)
+          const job = await processTransfers(transferEvents, deployedBridges)
+          logger.info('Transactions to send:', job.length)
+          if (job.length) {
+            await sendToQueue(job)
+          }
           break
         }
         default:

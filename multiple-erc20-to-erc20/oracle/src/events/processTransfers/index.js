@@ -19,34 +19,39 @@ const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 let validatorContract = null
 
 function processTransfersBuilder (config) {
-  return async function processTransfers (transfers, homeBridgeAddress) {
-    const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
+  return async function processTransfers (transfers, deployedBridges) {
     const txToSend = []
-
-    if (validatorContract === null) {
-      rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await homeBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
-
-      validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
-    }
-
     rootLogger.debug(`Processing ${transfers.length} Transfer events`)
     const callbacks = transfers.map(transfer =>
       limit(async () => {
-        const { from, value, data } = transfer.returnValues
+        const { from, value, data, txHash, tokenAddress } = transfer
 
         const logger = rootLogger.child({
-          eventTransactionHash: transfer.transactionHash
+          eventTransactionHash: txHash
         })
 
-        logger.info({ from, value, data }, `Processing transfer ${transfer.transactionHash}`)
+        logger.info({ from, value, data, tokenAddress }, `Processing transfer ${txHash}`)
+
+        const homeBridgeAddress = deployedBridges.filter(d => d.foreignToken === tokenAddress).map(d => d.homeBridge)[0]
+        if (!homeBridgeAddress) {
+          logger.warn(`Skipping transfer ${txHash} - could not find homeBridgeAddress for foreingToken: ${tokenAddress}`)
+          return
+        }
+        const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
+
+        if (validatorContract === null) {
+          rootLogger.debug('Getting validator contract address')
+          const validatorContractAddress = await homeBridge.methods.validatorContract().call()
+          rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
+
+          validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
+        }
 
         let recipient
         if (data && web3Foreign.utils.isAddress(data)) {
           recipient = data
         } else {
-          const receipt = await web3Foreign.eth.getTransactionReceipt(transfer.transactionHash)
+          const receipt = await web3Foreign.eth.getTransactionReceipt(txHash)
           logger.debug('receipt', receipt)
           const { events } = replaceLogsWithEvents(receipt, new web3Foreign.eth.Contract(basicTokenABI))
           logger.debug('events', events)
@@ -69,7 +74,7 @@ function processTransfersBuilder (config) {
             validatorContract,
             recipient: recipient,
             value,
-            txHash: transfer.transactionHash,
+            txHash: txHash,
             address: config.validatorAddress
           })
           logger.debug({ gasEstimate }, 'Gas estimated')
@@ -82,11 +87,11 @@ function processTransfersBuilder (config) {
             logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
             process.exit(EXIT_CODES.INCOMPATIBILITY)
           } else if (e instanceof AlreadySignedError) {
-            logger.info(`Already signed transfer ${transfer.transactionHash}`)
+            logger.info(`Already signed transfer ${txHash}`)
             return
           } else if (e instanceof AlreadyProcessedError) {
             logger.info(
-              `transfer ${transfer.transactionHash} was already processed by other validators`
+              `transfer ${txHash} was already processed by other validators`
             )
             return
           } else {
@@ -96,13 +101,13 @@ function processTransfersBuilder (config) {
         }
 
         const txData = await homeBridge.methods
-          .executeAffirmation(recipient, value, transfer.transactionHash)
+          .executeAffirmation(recipient, value, txHash)
           .encodeABI({ from: config.validatorAddress })
 
         txToSend.push({
           data: txData,
           gasEstimate,
-          transactionReference: transfer.transactionHash,
+          transactionReference: txHash,
           to: homeBridgeAddress
         })
       })
