@@ -34,7 +34,7 @@ function processTransfersBuilder (config) {
 
         const homeBridgeAddress = deployedBridges.filter(d => d.foreignBridge === to).map(d => d.homeBridge)[0]
         if (!homeBridgeAddress) {
-          logger.warn(`Skipping transfer ${txHash} - could not find homeBridgeAddress for foreingToken: ${tokenAddress}`)
+          logger.warn(`Skipping transfer ${txHash} - could not find homeBridgeAddress for foreingToken: ${tokenAddress}, foreignBridge: ${to}`)
           return
         }
         const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
