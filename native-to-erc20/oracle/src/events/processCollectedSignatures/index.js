@@ -2,6 +2,7 @@ require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
 const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
+const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home, web3Foreign } = require('../../services/web3')
 const { signatureToVRS } = require('../../utils/message')
@@ -34,11 +35,11 @@ function processCollectedSignaturesBuilder (config) {
 
     if (validatorContract === null) {
       rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await homeBridge.methods.validatorContract().call()
+      const validatorContractAddress = await foreignBridge.methods.validatorContract().call()
       rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
 
-      validatorContract = new web3Home.eth.Contract(
-        bridgeValidatorsABI,
+      validatorContract = new web3Foreign.eth.Contract(
+        foreignBridgeValidatorsABI,
         validatorContractAddress
       )
     }
