@@ -39,7 +39,7 @@ function processCollectedSignaturesBuilder (config) {
       rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
 
       validatorContract = new web3Foreign.eth.Contract(
-        config.id === 'native-erc' ? foreignBridgeValidatorsABI : bridgeValidatorsABI,
+        foreignBridgeValidatorsABI,
         validatorContractAddress
       )
     }
@@ -57,9 +57,7 @@ function processCollectedSignaturesBuilder (config) {
           eventTransactionHash: colSignature.transactionHash
         })
 
-        if (
-          authorityResponsibleForRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)
-        ) {
+        if (authorityResponsibleForRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
           logger.info(`Processing CollectedSignatures ${colSignature.transactionHash}`)
           const message = await homeBridge.methods.message(messageHash).call()
           const expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
@@ -124,11 +122,7 @@ function processCollectedSignaturesBuilder (config) {
             to: foreignBridgeAddress
           })
         } else {
-          logger.info(
-            `Validator not responsible for relaying CollectedSignatures ${
-              colSignature.transactionHash
-            }`
-          )
+          logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash}, waiting for ${authorityResponsibleForRelay}`)
         }
       })
     )
