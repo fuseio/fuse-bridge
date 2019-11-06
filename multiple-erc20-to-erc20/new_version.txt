@@ -1,0 +1,12 @@
+TAG = MAJOR.MINOR.PATCH
+
+cd WORKING_DIR/fuse-bridge/multiple-erc20-to-erc20/oracle
+
+docker build -t fusenet/multiple-erc20-to-erc20-oracle .
+
+docker tag fusenet/multiple-erc20-to-erc20-oracle fusenet/multiple-erc20-to-erc20-oracle:TAG
+
+docker push fusenet/multiple-erc20-to-erc20-oracle:TAG
+
+update TAG in:
+  WORKING_DIR/fuse-bridge/multiple-erc20-to-erc20/oracle/docker-compose.yml
