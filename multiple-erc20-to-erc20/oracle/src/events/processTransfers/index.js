@@ -24,17 +24,17 @@ function processTransfersBuilder (config) {
     rootLogger.debug(`Processing ${transfers.length} Transfer events`)
     const callbacks = transfers.map(transfer =>
       limit(async () => {
-        const { from, value, data, txHash, tokenAddress } = transfer
+        const { from, value, data, txHash, tokenAddress, to } = transfer
 
         const logger = rootLogger.child({
           eventTransactionHash: txHash
         })
 
-        logger.info({ from, value, data, tokenAddress }, `Processing transfer ${txHash}`)
+        logger.info({ from, value, data, tokenAddress, to }, `Processing transfer ${txHash}`)
 
-        const homeBridgeAddress = deployedBridges.filter(d => d.foreignToken === tokenAddress).map(d => d.homeBridge)[0]
+        const homeBridgeAddress = deployedBridges.filter(d => d.foreignBridge === to).map(d => d.homeBridge)[0]
         if (!homeBridgeAddress) {
-          logger.warn(`Skipping transfer ${txHash} - could not find homeBridgeAddress for foreingToken: ${tokenAddress}`)
+          logger.warn(`Skipping transfer ${txHash} - could not find homeBridgeAddress for foreingToken: ${tokenAddress}, foreignBridge: ${to}`)
           return
         }
         const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
