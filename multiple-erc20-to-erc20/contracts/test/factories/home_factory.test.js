@@ -172,4 +172,116 @@ contract('HomeBridgeFactory', async (accounts) => {
       await bridgeToken.mint(user, oneEther, {from: tokenOwner}).should.not.be.fulfilled
     })
   })
+  describe('#deployHomeBridgeWithToken', async () => {
+    let homeBridgeFactory
+    let bridgeToken
+    before(async () => {
+      homeBridgeFactory = await HomeBridgeFactory.new()
+      await homeBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, homeBridgeContract.address, requiredBlockConfirmations, gasPrice, homeDailyLimit, homeMaxPerTx, minPerTx, foreignDailyLimit, foreignMaxPerTx, owner, owner)
+      bridgeToken = await ERC677BridgeToken.new("Test", "TST", 18);
+    })
+
+    it('should deploy a home bridge', async () => {
+      await bridgeToken.addMinter(homeBridgeFactory.address);
+
+      const {logs} = await homeBridgeFactory.deployHomeBridgeWithToken(bridgeToken.address)
+      const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
+
+      ZERO_ADDRESS.should.not.be.equal(args._homeBridge)
+      ZERO_ADDRESS.should.not.be.equal(args._homeValidators)
+      ZERO_ADDRESS.should.not.be.equal(args._token)
+      args._blockNumber.should.be.bignumber.gte(0)
+
+      let homeBridge = await HomeBridge.at(args._homeBridge)
+      true.should.be.equal(await homeBridge.isInitialized())
+      args._homeValidators.should.be.equal(await homeBridge.validatorContract())
+      const deployedAtBlock = await homeBridge.deployedAtBlock()
+      deployedAtBlock.should.be.bignumber.above(0)
+      requiredBlockConfirmations.should.be.bignumber.equal(await homeBridge.requiredBlockConfirmations())
+      gasPrice.should.be.bignumber.equal(await homeBridge.gasPrice())
+      const bridgeMode = '0xba4690f5' // 4 bytes of keccak256('erc-to-erc-core')
+      const mode = await homeBridge.getBridgeMode()
+      mode.should.be.equal(bridgeMode)
+      const [major, minor, patch] = await homeBridge.getBridgeInterfacesVersion()
+      major.should.be.bignumber.gte(0)
+      minor.should.be.bignumber.gte(0)
+      patch.should.be.bignumber.gte(0)
+    })
+
+    it('should deploy a second home bridge using same factory and new token', async () => {
+      let newToken = await ERC677BridgeToken.new("Another ERC20", "SMT_2", 18);
+      await newToken.addMinter(homeBridgeFactory.address);
+
+      const {logs} = await homeBridgeFactory.deployHomeBridgeWithToken(newToken.address);
+      const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
+
+      ZERO_ADDRESS.should.not.be.equal(args._homeBridge)
+      ZERO_ADDRESS.should.not.be.equal(args._homeValidators)
+      ZERO_ADDRESS.should.not.be.equal(args._token)
+      args._blockNumber.should.be.bignumber.gte(0)
+
+      let homeBridge = await HomeBridge.at(args._homeBridge)
+      true.should.be.equal(await homeBridge.isInitialized())
+      args._homeValidators.should.be.equal(await homeBridge.validatorContract())
+      const deployedAtBlock = await homeBridge.deployedAtBlock()
+      deployedAtBlock.should.be.bignumber.above(0)
+      requiredBlockConfirmations.should.be.bignumber.equal(await homeBridge.requiredBlockConfirmations())
+      gasPrice.should.be.bignumber.equal(await homeBridge.gasPrice())
+      const bridgeMode = '0xba4690f5' // 4 bytes of keccak256('erc-to-erc-core')
+      const mode = await homeBridge.getBridgeMode()
+      mode.should.be.equal(bridgeMode)
+      const [major, minor, patch] = await homeBridge.getBridgeInterfacesVersion()
+      major.should.be.bignumber.gte(0)
+      minor.should.be.bignumber.gte(0)
+      patch.should.be.bignumber.gte(0)
+    })
+
+    it('should create token with correct agruments on deploy home bridge', async () => {
+      let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18}
+      let ercToken = await ERC677BridgeToken.new(token.name, token.symbol, token.decimals);
+      await ercToken.addMinter(homeBridgeFactory.address);
+
+      const {logs} = await homeBridgeFactory.deployHomeBridgeWithToken(ercToken.address);
+      const {args} = getEventFromLogs(logs, 'HomeBridgeDeployed')
+      const bridgeToken = await ERC677BridgeToken.at(args._token)
+
+      token.name.should.be.equal(await bridgeToken.name())
+      token.symbol.should.be.equal(await bridgeToken.symbol())
+      token.decimals.should.be.equal((await bridgeToken.decimals()).toNumber())
+      owner.should.be.equal(await bridgeToken.owner())
+      args._homeBridge.should.be.equal(await bridgeToken.bridgeContract())
+    })
+
+    it('should not deploy home bridge if not minter of token', async () => {
+      let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18}
+      const bridgeToken = await ERC677BridgeToken.new(token.name, token.symbol, token.decimals);
+
+      try {
+        let error = await homeBridgeFactory.deployHomeBridgeWithToken(bridgeToken.address)
+      }
+      catch(error)
+      {
+        let condition = (
+          error.message.search('VM Exception while processing transaction: revert Must be minter of token') > -1
+        );
+        assert.isTrue(condition, 'Expected revert VM Exception, got this instead: \n ' + error.message);
+      }
+    })
+
+    it('should not allow non owner of token to deploy bridge', async () => {
+      let token = { name: "Some ERC20", symbol: "SMT_1", decimals: 18}
+      const bridgeToken = await ERC677BridgeToken.new(token.name, token.symbol, token.decimals);
+
+      try {
+        let error = await homeBridgeFactory.deployHomeBridgeWithToken(bridgeToken.address)
+      }
+      catch(error)
+      {
+        let condition = (
+          error.message.search('VM Exception while processing transaction: revert Must be minter of token') > -1
+        );
+        assert.isTrue(condition, 'Expected revert VM Exception, got this instead: \n ' + error.message);
+      }
+    })
+  })
 })

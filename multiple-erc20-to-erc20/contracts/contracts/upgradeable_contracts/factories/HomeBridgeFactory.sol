@@ -97,10 +97,11 @@ contract HomeBridgeFactory is BasicBridgeFactory {
     }
 
     function deployHomeBridgeWithToken(address _token) public {
+        ERC677BridgeToken token = ERC677BridgeToken(_token);
         // Check if contract is minter of token
-        require(_token.isMinter(address(this), "must be minter of token");
+        require(token.isMinter(address(this)), "Must be minter of token");
         // Check if message sender is owner of token
-        require(_token.owner() == msg.sender);
+        require(token.owner() == msg.sender);
         // deploy new EternalStorageProxy
         EternalStorageProxy proxy = new EternalStorageProxy();
         // connect it to the static BridgeValidators implementation
@@ -115,8 +116,6 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         proxy = new EternalStorageProxy();
         // connect it to the static homeBridgeErcToErc implementation
         proxy.upgradeTo(1, homeBridgeErcToErcImplementation());
-        // deploy erc677 token bridge token
-        ERC677BridgeToken token = new ERC677BridgeToken(_tokenName, _tokenSymbol, _tokenDecimals);
         // set token bridge contract
         token.setBridgeContract(proxy);
         // add token bridge contract as minter
