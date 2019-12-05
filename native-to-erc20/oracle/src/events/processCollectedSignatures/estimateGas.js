@@ -55,13 +55,6 @@ async function estimateGas ({
       throw new AlreadyProcessedError()
     }
 
-    logger.debug('Check if the message was already processed')
-    parsedMsg = parseNewSetMessage(message)
-    alreadyProcessed = await foreignBridge.methods.relayedMessages(parsedMsg.txHash).call()
-    if (alreadyProcessed) {
-      throw new AlreadyProcessedError()
-    }
-
     // check if the number of signatures is enough
     logger.debug('Check if number of signatures is enough')
     const requiredSignatures = await validatorContract.methods.requiredSignatures().call()
