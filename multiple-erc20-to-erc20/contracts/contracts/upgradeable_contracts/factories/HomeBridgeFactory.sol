@@ -96,6 +96,42 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         emit HomeBridgeDeployed(homeBridge, bridgeValidators, token, block.number);
     }
 
+    function deployHomeBridgeWithToken(address _token) public {
+        ERC677BridgeToken token = ERC677BridgeToken(_token);
+        // Check if contract is minter of token
+        require(token.isMinter(address(this)), "Must be minter of token");
+        // Check if message sender is owner of token
+        require(token.owner() == msg.sender);
+        // deploy new EternalStorageProxy
+        EternalStorageProxy proxy = new EternalStorageProxy();
+        // connect it to the static BridgeValidators implementation
+        proxy.upgradeTo(1, bridgeValidatorsImplementation());
+        // cast proxy as IBridgeValidators
+        IBridgeValidators bridgeValidators = IBridgeValidators(proxy);
+        // initialize bridgeValidators
+        bridgeValidators.initialize(requiredSignatures(), initialValidators(), bridgeValidatorsOwner());
+        // transfer proxy upgradeability admin
+        proxy.transferProxyOwnership(bridgeValidatorsProxyOwner());
+        // deploy new EternalStorageProxy
+        proxy = new EternalStorageProxy();
+        // connect it to the static homeBridgeErcToErc implementation
+        proxy.upgradeTo(1, homeBridgeErcToErcImplementation());
+        // set token bridge contract
+        token.setBridgeContract(proxy);
+        // add token bridge contract as minter
+        token.addMinter(proxy);
+        // renounce minting from the bridge factory contract
+        token.renounceMinter();
+        // cast proxy as IHomeBridge
+        IHomeBridge homeBridge = IHomeBridge(proxy);
+        // initialize homeBridge
+        homeBridge.initialize(bridgeValidators, homeDailyLimit(), homeMaxPerTx(), minPerTx(), gasPrice(), requiredBlockConfirmations(), token, foreignDailyLimit(), foreignMaxPerTx(), homeBridgeOwner());
+        // transfer proxy upgradeability admin
+        proxy.transferProxyOwnership(homeBridgeProxyOwner());
+        // emit event
+        emit HomeBridgeDeployed(homeBridge, bridgeValidators, token, block.number);
+    }
+
     function homeBridgeErcToErcImplementation() public view returns(address) {
         return addressStorage[keccak256(abi.encodePacked("homeBridgeErcToErcImplementation"))];
     }
