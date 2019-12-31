@@ -2,7 +2,7 @@ const path = require('path')
 require('dotenv').config({
   path: path.join(__dirname, '..', '.env')
 })
-const { isAddress, toBN } = require('web3').utils
+const { isAddress, toBN } = require('web3-utils')
 const envalid = require('envalid')
 
 const bigNumValidator = envalid.makeValidator(x => toBN(x))

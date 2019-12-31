@@ -83,13 +83,13 @@ async function deployHome() {
   const initializeHomeBridgeData = await homeBridgeImplementation.methods
     .initialize(
       consensus.options.address,
-      HOME_DAILY_LIMIT,
-      HOME_MAX_AMOUNT_PER_TX,
-      HOME_MIN_AMOUNT_PER_TX,
-      HOME_GAS_PRICE,
+      HOME_DAILY_LIMIT.toString(),
+      HOME_MAX_AMOUNT_PER_TX.toString(),
+      HOME_MIN_AMOUNT_PER_TX.toString(),
+      HOME_GAS_PRICE.toString(),
       HOME_REQUIRED_BLOCK_CONFIRMATIONS,
-      FOREIGN_DAILY_LIMIT,
-      FOREIGN_MAX_AMOUNT_PER_TX,
+      FOREIGN_DAILY_LIMIT.toString(),
+      FOREIGN_MAX_AMOUNT_PER_TX.toString(),
       HOME_BRIDGE_OWNER
     )
     .encodeABI({ from: DEPLOYMENT_ACCOUNT_ADDRESS })
