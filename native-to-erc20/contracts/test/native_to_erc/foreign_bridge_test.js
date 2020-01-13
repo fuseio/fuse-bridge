@@ -452,7 +452,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
     })
     it('should allow to update a new set', async () => {
       var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var blockNumber = web3.toBigNumber(217455)
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
       var signature = await sign(authorities[0], message);
       var vrs = signatureToVRS(signature);
       false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
@@ -465,7 +466,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
     })
     it('should allow to update a new set if there are enough validator signatures even when some are from non-validators', async () => {
       var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var blockNumber = web3.toBigNumber(217455)
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
       var signature1 = await sign(authorities[0], message);
       var vrs1 = signatureToVRS(signature1);
       var signature2 = await sign(accounts[3], message);
@@ -481,7 +483,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
     it('should not allow to update a new set with same transactionHash but different addresses', async () => {
       var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
       // tx 1
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var blockNumber = web3.toBigNumber(217455)
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
       var signature = await sign(authorities[0], message);
       var vrs = signatureToVRS(signature);
       false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
@@ -489,7 +492,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
 
       // tx 2
-      var message2 = createNewSetMessage([accounts[5]], transactionHash, foreignBridge.address);
+      var blockNumber = web3.toBigNumber(217455)
+      var message2 = createNewSetMessage([accounts[5]], transactionHash, blockNumber, foreignBridge.address);
       var signature2 = await sign(authorities[0], message2);
       var vrs2 = signatureToVRS(signature2);
       true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
@@ -498,7 +502,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
     })
     it('should not allow to update a new set with signature from non-validator', async () => {
       var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var blockNumber = web3.toBigNumber(217455)
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
       var signature = await sign(accounts[3], message);
       var vrs = signatureToVRS(signature);
       false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
@@ -508,7 +513,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
     it('should not allow to update a new set with duplicate signatures', async () => {
       await validatorContract.setRequiredSignatures(2)
       var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var blockNumber = web3.toBigNumber(217455)
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
       var signature1 = await sign(authorities[0], message);
       var vrs1 = signatureToVRS(signature1);
       var signature2 = await sign(authorities[0], message);

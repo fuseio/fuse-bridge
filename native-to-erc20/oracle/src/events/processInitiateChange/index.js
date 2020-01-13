@@ -50,6 +50,7 @@ function processInitiateChangeBuilder (config) {
     rootLogger.debug(`Processing ${initiateChangeEvents.length} InitiateChange events`)
     const callbacks = initiateChangeEvents.map(initiateChange =>
       limit(async () => {
+        const { blockNumber } = initiateChange
         const { newSet } = initiateChange.returnValues
 
         const logger = rootLogger.child({
@@ -66,7 +67,8 @@ function processInitiateChangeBuilder (config) {
           const message = createNewSetMessage({
             newSet: newSet,
             transactionHash: initiateChange.transactionHash,
-            bridgeAddress: foreignBridgeAddress
+            blockNumber,
+            bridgeAddress: foreignBridgeAddress,
           })
 
           const signature = web3Home.eth.accounts.sign(message, `0x${VALIDATOR_ADDRESS_PRIVATE_KEY}`)

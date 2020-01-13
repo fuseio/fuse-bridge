@@ -99,7 +99,7 @@ function createMessage(recipient, value, transactionHash, contractAddress) {
 }
 module.exports.createMessage = createMessage
 
-function createNewSetMessage(newSet, transactionHash, contractAddress) {
+function createNewSetMessage(newSet, transactionHash, blockNumber, contractAddress) {
   for(let i = 0; i < newSet.length; i++) {
     newSet[i] = strip0x(newSet[i])
     assert.equal(newSet[i].length, 20 * 2)
@@ -108,10 +108,13 @@ function createNewSetMessage(newSet, transactionHash, contractAddress) {
   transactionHash = strip0x(transactionHash)
   assert.equal(transactionHash.length, 32 * 2)
 
+  blockNumber = strip0x(bigNumberToPaddedBytes32(blockNumber))
+  assert.equal(blockNumber.length, 64)
+
   contractAddress = strip0x(contractAddress)
   assert.equal(contractAddress.length, 20 * 2)
 
-  const message = "0x" + transactionHash + contractAddress + newSet.join('')
+  const message = "0x" + transactionHash + blockNumber + contractAddress + newSet.join('')
   return message
 }
 module.exports.createNewSetMessage = createNewSetMessage

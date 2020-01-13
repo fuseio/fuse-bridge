@@ -45,7 +45,7 @@ library Message {
 
     function parseNewSetMessage(bytes message)
         internal
-        returns(address[] memory newSet, bytes32 txHash, address contractAddress)
+        returns(address[] memory newSet, bytes32 txHash, bytes32 blockNumber, address contractAddress)
     {
         uint256 msgLength;
         uint256 position;
@@ -53,8 +53,9 @@ library Message {
         assembly {
             msgLength := mload(message)
             txHash := mload(add(message, 32))
-            contractAddress := mload(add(message, 52))
-            position := 72
+            blockNumber:= mload(add(message, 64))
+            contractAddress := mload(add(message, 84))
+            position := 104
         }
         uint256 newSetLength = (msgLength - position) / 20 + 1;
         newSet = new address[](newSetLength);
@@ -67,7 +68,7 @@ library Message {
             position += 20;
             i++;
         }
-        return (newSet, txHash, contractAddress);
+        return (newSet, txHash, blockNumber, contractAddress);
     }
 
     function isMessageValid(bytes _msg) internal pure returns(bool) {
