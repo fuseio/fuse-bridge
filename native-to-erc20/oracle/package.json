@@ -10,7 +10,7 @@
     "watcher:initiate-change": "./scripts/start-worker.sh watcher initiate-change-watcher",
     "sender:home": "./scripts/start-worker.sh sender home-sender",
     "sender:foreign": "./scripts/start-worker.sh sender foreign-sender",
-    "dev": "concurrently -n 'watcher:signature-request,watcher:collected-signatures,watcher:affirmation-request,watcher:rewarded-on-cycle,watcher:initiate-change,sender:home,sender:foreign' -c 'red,green,yellow,blue,magenta,cyan,gray' 'npm run watcher:signature-request' 'npm run watcher:collected-signatures' 'npm run watcher:affirmation-request' 'npm run watcher:rewarded-on-cycle' 'npm run watcher:initiate-change' 'npm run sender:home' 'npm run sender:foreign'",
+    "dev": "concurrently -n 'watcher:signature-request,watcher:collected-signatures,watcher:affirmation-request,watcher:rewarded-on-cycle,watcher:initiate-change,sender:home,sender:foreign' -c 'green,yellow,blue,magenta,cyan,white,gray' 'npm run watcher:signature-request' 'npm run watcher:collected-signatures' 'npm run watcher:affirmation-request' 'npm run watcher:rewarded-on-cycle' 'npm run watcher:initiate-change' 'npm run sender:home' 'npm run sender:foreign'",
     "lint": "./node_modules/.bin/standard",
     "test": "NODE_ENV=test mocha",
     "postinstall": "mkdir -p logs"

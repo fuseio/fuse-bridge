@@ -1,7 +1,6 @@
 require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
-const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
 const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home, web3Foreign } = require('../../services/web3')
@@ -16,7 +15,7 @@ const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
-let validatorContract = null
+let foreignValidatorContract = null
 
 function processCollectedSignaturesBuilder (config) {
   return async function processCollectedSignatures (
@@ -33,14 +32,14 @@ function processCollectedSignaturesBuilder (config) {
 
     const txToSend = []
 
-    if (validatorContract === null) {
+    if (foreignValidatorContract === null) {
       rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await foreignBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
+      const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
+      rootLogger.debug({ foreignValidatorContractAddress }, 'Validator contract address obtained')
 
-      validatorContract = new web3Foreign.eth.Contract(
+      foreignValidatorContract = new web3Foreign.eth.Contract(
         foreignBridgeValidatorsABI,
-        validatorContractAddress
+        foreignValidatorContractAddress
       )
     }
 
@@ -84,7 +83,7 @@ function processCollectedSignaturesBuilder (config) {
             logger.debug('Estimate gas')
             const result = await estimateGas({
               foreignBridge,
-              validatorContract,
+              validatorContract: foreignValidatorContract,
               v,
               r,
               s,
