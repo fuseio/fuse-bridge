@@ -154,28 +154,6 @@ library Message {
         return keccak256(prefix, message);
     }
 
-    function hasEnoughValidSignatures(
-        bytes _message,
-        uint8[] _vs,
-        bytes32[] _rs,
-        bytes32[] _ss,
-        IBridgeValidators _validatorContract) internal view
-    {
-        uint256 requiredSignatures = _validatorContract.requiredSignatures();
-        require(_vs.length >= requiredSignatures);
-        bytes32 hash = hashMessage(_message);
-        address[] memory encounteredAddresses = new address[](requiredSignatures);
-
-        for (uint256 i = 0; i < requiredSignatures; i++) {
-            address recoveredAddress = ecrecover(hash, _vs[i], _rs[i], _ss[i]);
-            require(_validatorContract.isValidator(recoveredAddress));
-            if (addressArrayContains(encounteredAddresses, recoveredAddress)) {
-                revert();
-            }
-            encounteredAddresses[i] = recoveredAddress;
-        }
-    }
-
     function hasEnoughValidSignaturesForeignBridgeValidator(
         bytes _message,
         uint8[] _vs,
@@ -184,18 +162,24 @@ library Message {
         IForeignBridgeValidators _validatorContract) internal view
     {
         uint256 requiredSignatures = _validatorContract.requiredSignatures();
+        require(_vs.length == _rs.length);
+        require(_vs.length == _ss.length);
         require(_vs.length >= requiredSignatures);
         bytes32 hash = hashMessage(_message);
         address[] memory encounteredAddresses = new address[](requiredSignatures);
+        uint256 signaturesCount;
 
-        for (uint256 i = 0; i < requiredSignatures; i++) {
+        for (uint256 i = 0; i < _vs.length; i++) {
             address recoveredAddress = ecrecover(hash, _vs[i], _rs[i], _ss[i]);
-            require(_validatorContract.isValidator(recoveredAddress));
-            if (addressArrayContains(encounteredAddresses, recoveredAddress)) {
-                revert();
+            if(_validatorContract.isValidator(recoveredAddress)) {
+                if (addressArrayContains(encounteredAddresses, recoveredAddress)) {
+                    revert();
+                }
+                encounteredAddresses[i] = recoveredAddress;
+                signaturesCount++;
             }
-            encounteredAddresses[i] = recoveredAddress;
         }
+        require(signaturesCount >=requiredSignatures);
     }
 
     function hasEnoughValidNewSetSignaturesForeignBridgeValidator(
@@ -206,18 +190,24 @@ library Message {
         IForeignBridgeValidators _validatorContract) internal view
     {
         uint256 requiredSignatures = _validatorContract.requiredSignatures();
+        require(_vs.length == _rs.length);
+        require(_vs.length == _ss.length);
         require(_vs.length >= requiredSignatures);
         bytes32 hash = hashMessageOfUnknownLength(_message);
         address[] memory encounteredAddresses = new address[](requiredSignatures);
+        uint256 signaturesCount;
 
-        for (uint256 i = 0; i < requiredSignatures; i++) {
+        for (uint256 i = 0; i < _vs.length; i++) {
             address recoveredAddress = ecrecover(hash, _vs[i], _rs[i], _ss[i]);
-            require(_validatorContract.isValidator(recoveredAddress));
-            if (addressArrayContains(encounteredAddresses, recoveredAddress)) {
-                revert();
+            if(_validatorContract.isValidator(recoveredAddress)) {
+                if (addressArrayContains(encounteredAddresses, recoveredAddress)) {
+                    revert();
+                }
+                encounteredAddresses[i] = recoveredAddress;
+                signaturesCount++;
             }
-            encounteredAddresses[i] = recoveredAddress;
         }
+        require(signaturesCount >=requiredSignatures);
     }
 
     function recover(bytes32 hash, bytes sig) internal pure returns (address) {

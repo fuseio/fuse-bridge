@@ -440,10 +440,15 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
 
   describe('#executeNewSetSignatures', async () => {
     beforeEach(async () => {
-      foreignBridge = await ForeignBridge.new()
+      foreignBridge = await ForeignBridge.new();
       token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
+      validatorContract = await ForeignBridgeValidators.new();
+      authorities = [accounts[1], accounts[2]];
+      owner = accounts[0];
+      await validatorContract.initialize(authorities, owner);
+      await validatorContract.setRequiredSignatures(1);
+      await validatorContract.setOwnerMock(foreignBridge.address);
       await foreignBridge.initialize(validatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted);
-      await validatorContract.setOwnerMock(foreignBridge.address)
     })
     it('should allow to update a new set', async () => {
       var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
@@ -452,6 +457,21 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       var vrs = signatureToVRS(signature);
       false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
       const {logs} = await foreignBridge.executeNewSetSignatures([vrs.v], [vrs.r], [vrs.s], message).should.be.fulfilled;
+      logs[0].event.should.be.equal("RelayedNewSetMessage");
+      logs[0].args.transactionHash.should.be.equal(transactionHash);
+      logs[0].args.newSet.should.be.deep.equal([accounts[3], accounts[4]]);
+      true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
+      (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
+    })
+    it('should allow to update a new set if there are enough validator signatures even when some are from non-validators', async () => {
+      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var signature1 = await sign(authorities[0], message);
+      var vrs1 = signatureToVRS(signature1);
+      var signature2 = await sign(accounts[3], message);
+      var vrs2 = signatureToVRS(signature2);
+      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
+      const {logs} = await foreignBridge.executeNewSetSignatures([vrs1.v, vrs2.v], [vrs1.r, vrs2.r], [vrs1.s, vrs2.s], message).should.be.fulfilled;
       logs[0].event.should.be.equal("RelayedNewSetMessage");
       logs[0].args.transactionHash.should.be.equal(transactionHash);
       logs[0].args.newSet.should.be.deep.equal([accounts[3], accounts[4]]);
@@ -475,6 +495,27 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
       await foreignBridge.executeNewSetSignatures([vrs2.v], [vrs2.r], [vrs2.s], message2).should.be.rejectedWith(ERROR_MSG);
       (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
+    })
+    it('should not allow to update a new set with signature from non-validator', async () => {
+      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var signature = await sign(accounts[3], message);
+      var vrs = signatureToVRS(signature);
+      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
+      await foreignBridge.executeNewSetSignatures([vrs.v], [vrs.r], [vrs.s], message).should.be.rejectedWith(ERROR_MSG);
+      (await validatorContract.validators()).should.be.deep.equal([authorities[0], authorities[1]])
+    })
+    it('should not allow to update a new set with duplicate signatures', async () => {
+      await validatorContract.setRequiredSignatures(2)
+      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, foreignBridge.address);
+      var signature1 = await sign(authorities[0], message);
+      var vrs1 = signatureToVRS(signature1);
+      var signature2 = await sign(authorities[0], message);
+      var vrs2 = signatureToVRS(signature2);
+      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
+      await foreignBridge.executeNewSetSignatures([vrs1.v, vrs2.v], [vrs1.r, vrs2.r], [vrs1.s, vrs2.s], message).should.be.rejectedWith(ERROR_MSG);
+      (await validatorContract.validators()).should.be.deep.equal([authorities[0], authorities[1]])
     })
   })
 
