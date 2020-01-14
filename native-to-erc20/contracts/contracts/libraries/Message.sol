@@ -45,7 +45,7 @@ library Message {
 
     function parseNewSetMessage(bytes message)
         internal
-        returns(address[] memory newSet, bytes32 txHash, bytes32 blockNumber, address contractAddress)
+        returns(address[] memory newSet, bytes32 txHash, uint256 blockNumber, address contractAddress)
     {
         uint256 msgLength;
         uint256 position;
@@ -173,11 +173,10 @@ library Message {
         for (uint256 i = 0; i < _vs.length; i++) {
             address recoveredAddress = ecrecover(hash, _vs[i], _rs[i], _ss[i]);
             if(_validatorContract.isValidator(recoveredAddress)) {
-                if (addressArrayContains(encounteredAddresses, recoveredAddress)) {
-                    revert();
+                if (!addressArrayContains(encounteredAddresses, recoveredAddress)) {
+                    encounteredAddresses[i] = recoveredAddress;
+                    signaturesCount++;
                 }
-                encounteredAddresses[i] = recoveredAddress;
-                signaturesCount++;
             }
         }
         require(signaturesCount >=requiredSignatures);
@@ -201,11 +200,10 @@ library Message {
         for (uint256 i = 0; i < _vs.length; i++) {
             address recoveredAddress = ecrecover(hash, _vs[i], _rs[i], _ss[i]);
             if(_validatorContract.isValidator(recoveredAddress)) {
-                if (addressArrayContains(encounteredAddresses, recoveredAddress)) {
-                    revert();
+                if (!addressArrayContains(encounteredAddresses, recoveredAddress)) {
+                    encounteredAddresses[i] = recoveredAddress;
+                    signaturesCount++;
                 }
-                encounteredAddresses[i] = recoveredAddress;
-                signaturesCount++;
             }
         }
         require(signaturesCount >=requiredSignatures);

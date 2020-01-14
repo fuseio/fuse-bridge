@@ -80,7 +80,7 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
         Message.hasEnoughValidNewSetSignaturesForeignBridgeValidator(message, vs, rs, ss, validatorContract());
         address[] memory newSet;
         bytes32 txHash;
-        bytes32 blockNumber;
+        uint256 blockNumber;
         address contractAddress;
         (newSet, txHash, blockNumber, contractAddress) = Message.parseNewSetMessage(message);
         require(contractAddress == address(this));
