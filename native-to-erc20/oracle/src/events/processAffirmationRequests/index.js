@@ -26,7 +26,6 @@ function processAffirmationRequestsBuilder (config) {
       rootLogger.debug('Getting validator contract address')
       const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
       rootLogger.debug({ homeValidatorContractAddress }, 'Validator contract address obtained')
-
       homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
     }
 

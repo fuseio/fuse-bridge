@@ -37,7 +37,6 @@ function processSignatureRequestsBuilder (config) {
       rootLogger.debug('Getting validator contract address')
       const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
       rootLogger.debug({ homeValidatorContractAddress }, 'Validator contract address obtained')
-
       homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
     }
 
@@ -50,10 +49,7 @@ function processSignatureRequestsBuilder (config) {
           eventTransactionHash: signatureRequest.transactionHash
         })
 
-        logger.info(
-          { sender: recipient, value, data },
-          `Processing signatureRequest ${signatureRequest.transactionHash}`
-        )
+        logger.info({ sender: recipient, value, data }, `Processing signatureRequest ${signatureRequest.transactionHash}`)
 
         let r = recipient
         if (data && web3Home.utils.isAddress(data)) {

@@ -29,13 +29,13 @@ function processInitiateChangeBuilder (config) {
   ) {
     const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
     const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
+
     const txToSend = []
 
     if (homeValidatorContract === null) {
       rootLogger.debug('Getting home validator contract address')
       const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
       rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
-
       homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
     }
 
@@ -43,7 +43,6 @@ function processInitiateChangeBuilder (config) {
       rootLogger.debug('Getting foreign validator contract address')
       const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
       rootLogger.debug({ foreignValidatorContractAddress }, 'Foreign validator contract address obtained')
-
       foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
@@ -58,73 +57,74 @@ function processInitiateChangeBuilder (config) {
         })
 
         const isForeignValidator = await foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
-        if (isForeignValidator) {
-          logger.info(
-            { newSet },
-            `Processing initiateChange ${initiateChange.transactionHash}`
-          )
-
-          const message = createNewSetMessage({
-            newSet: newSet,
-            transactionHash: initiateChange.transactionHash,
-            blockNumber,
-            bridgeAddress: foreignBridgeAddress,
-          })
-
-          const signature = web3Home.eth.accounts.sign(message, `0x${VALIDATOR_ADDRESS_PRIVATE_KEY}`)
-
-          logger.debug('message', message)
-          logger.debug('signature', signature)
-
-          let gasEstimate
-          try {
-            logger.debug('Estimate gas')
-            gasEstimate = await estimateGas({
-              web3: web3Home,
-              homeBridge,
-              validatorContract: homeValidatorContract,
-              signature: signature.signature,
-              message,
-              address: config.validatorAddress
-            })
-            logger.debug({ gasEstimate }, 'Gas estimated')
-          } catch (e) {
-            if (e instanceof HttpListProviderError) {
-              throw new Error(
-                'RPC Connection Error: submitSignatureOfMessageWithUnknownLength Gas Estimate cannot be obtained.'
-              )
-            } else if (e instanceof InvalidValidatorError) {
-              logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
-              return
-            } else if (e instanceof AlreadySignedError) {
-              logger.info(`Already signed initiateChange ${initiateChange.transactionHash}`)
-              return
-            } else if (e instanceof AlreadyProcessedError) {
-              logger.info(
-                `initiateChange ${
-                  initiateChange.transactionHash
-                } was already processed by other validators`
-              )
-              return
-            } else {
-              logger.error(e, 'Unknown error while processing transaction')
-              throw e
-            }
-          }
-
-          const data = await homeBridge.methods
-            .submitSignatureOfMessageWithUnknownLength(signature.signature, message)
-            .encodeABI({ from: config.validatorAddress })
-
-          txToSend.push({
-            data,
-            gasEstimate,
-            transactionReference: initiateChange.transactionHash,
-            to: homeBridgeAddress
-          })
-        } else {
+        if (!isForeignValidator) {
           logger.info(`Validator is not part of foreign validators, so not responsible for handling InitiateChange ${initiateChange.transactionHash}`)
+          return
         }
+
+        logger.info(
+          { newSet },
+          `Processing initiateChange ${initiateChange.transactionHash}`
+        )
+
+        const message = createNewSetMessage({
+          newSet: newSet,
+          transactionHash: initiateChange.transactionHash,
+          blockNumber,
+          bridgeAddress: foreignBridgeAddress
+        })
+
+        const signature = web3Home.eth.accounts.sign(message, `0x${VALIDATOR_ADDRESS_PRIVATE_KEY}`)
+
+        logger.debug('message', message)
+        logger.debug('signature', signature)
+
+        let gasEstimate
+        try {
+          logger.debug('Estimate gas')
+          gasEstimate = await estimateGas({
+            web3: web3Home,
+            homeBridge,
+            validatorContract: homeValidatorContract,
+            signature: signature.signature,
+            message,
+            address: config.validatorAddress
+          })
+          logger.debug({ gasEstimate }, 'Gas estimated')
+        } catch (e) {
+          if (e instanceof HttpListProviderError) {
+            throw new Error(
+              'RPC Connection Error: submitSignatureOfMessageWithUnknownLength Gas Estimate cannot be obtained.'
+            )
+          } else if (e instanceof InvalidValidatorError) {
+            logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
+            return
+          } else if (e instanceof AlreadySignedError) {
+            logger.info(`Already signed initiateChange ${initiateChange.transactionHash}`)
+            return
+          } else if (e instanceof AlreadyProcessedError) {
+            logger.info(
+              `initiateChange ${
+                initiateChange.transactionHash
+              } was already processed by other validators`
+            )
+            return
+          } else {
+            logger.error(e, 'Unknown error while processing transaction')
+            throw e
+          }
+        }
+
+        const data = await homeBridge.methods
+          .submitSignatureOfMessageWithUnknownLength(signature.signature, message)
+          .encodeABI({ from: config.validatorAddress })
+
+        txToSend.push({
+          data,
+          gasEstimate,
+          transactionReference: initiateChange.transactionHash,
+          to: homeBridgeAddress
+        })
       })
     )
 

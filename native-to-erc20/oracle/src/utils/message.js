@@ -119,7 +119,7 @@ function parseNewSetMessage (message) {
   return {
     newSet,
     txHash,
-    blockNumber, 
+    blockNumber,
     contractAddress
   }
 }

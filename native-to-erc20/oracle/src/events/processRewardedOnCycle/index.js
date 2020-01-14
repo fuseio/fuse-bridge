@@ -40,7 +40,6 @@ function processRewardedOnCycleBuilder (config) {
       rootLogger.debug('Getting home validator contract address')
       const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
       rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
-
       homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
     }
 
@@ -48,7 +47,6 @@ function processRewardedOnCycleBuilder (config) {
       rootLogger.debug('Getting foreign validator contract address')
       const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
       rootLogger.debug({ foreignValidatorContractAddress }, 'Foreign validator contract address obtained')
-
       foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
@@ -62,71 +60,72 @@ function processRewardedOnCycleBuilder (config) {
         })
 
         const isForeignValidator = await foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
-        if (isForeignValidator) {
-          logger.info(
-            { value },
-            `Processing rewardedOnCycle ${rewardedOnCycle.transactionHash}`
-          )
-
-          const message = createMessage({
-            recipient: foreignBridgeAddress, // we will mint the tokens and lock them on foreign bridge
-            value: value,
-            transactionHash: rewardedOnCycle.transactionHash,
-            bridgeAddress: foreignBridgeAddress,
-            expectedMessageLength
-          })
-
-          const signature = web3Home.eth.accounts.sign(message, `0x${VALIDATOR_ADDRESS_PRIVATE_KEY}`)
-
-          let gasEstimate
-          try {
-            logger.debug('Estimate gas')
-            gasEstimate = await estimateGas({
-              web3: web3Home,
-              homeBridge,
-              validatorContract: homeValidatorContract,
-              signature: signature.signature,
-              message,
-              address: config.validatorAddress
-            })
-            logger.debug({ gasEstimate }, 'Gas estimated')
-          } catch (e) {
-            if (e instanceof HttpListProviderError) {
-              throw new Error(
-                'RPC Connection Error: submitSignature Gas Estimate cannot be obtained.'
-              )
-            } else if (e instanceof InvalidValidatorError) {
-              logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
-              return
-            } else if (e instanceof AlreadySignedError) {
-              logger.info(`Already signed rewardedOnCycle ${rewardedOnCycle.transactionHash}`)
-              return
-            } else if (e instanceof AlreadyProcessedError) {
-              logger.info(
-                `rewardedOnCycle ${
-                  rewardedOnCycle.transactionHash
-                } was already processed by other validators`
-              )
-              return
-            } else {
-              logger.error(e, 'Unknown error while processing transaction')
-              throw e
-            }
-          }
-
-          const data = await homeBridge.methods
-            .submitSignature(signature.signature, message)
-            .encodeABI({ from: config.validatorAddress })
-
-          txToSend.push({
-            data,
-            gasEstimate,
-            transactionReference: rewardedOnCycle.transactionHash,
-            to: homeBridgeAddress
-          })
-        } else {
+        if (!isForeignValidator) {
           logger.info(`Validator is not part of foreign validators, so not responsible for handling RewardedOnCycle ${rewardedOnCycle.transactionHash}`)
+          return
         }
+
+        logger.info(
+          { value },
+          `Processing rewardedOnCycle ${rewardedOnCycle.transactionHash}`
+        )
+
+        const message = createMessage({
+          recipient: foreignBridgeAddress, // we will mint the tokens and lock them on foreign bridge
+          value: value,
+          transactionHash: rewardedOnCycle.transactionHash,
+          bridgeAddress: foreignBridgeAddress,
+          expectedMessageLength
+        })
+
+        const signature = web3Home.eth.accounts.sign(message, `0x${VALIDATOR_ADDRESS_PRIVATE_KEY}`)
+
+        let gasEstimate
+        try {
+          logger.debug('Estimate gas')
+          gasEstimate = await estimateGas({
+            web3: web3Home,
+            homeBridge,
+            validatorContract: homeValidatorContract,
+            signature: signature.signature,
+            message,
+            address: config.validatorAddress
+          })
+          logger.debug({ gasEstimate }, 'Gas estimated')
+        } catch (e) {
+          if (e instanceof HttpListProviderError) {
+            throw new Error(
+              'RPC Connection Error: submitSignature Gas Estimate cannot be obtained.'
+            )
+          } else if (e instanceof InvalidValidatorError) {
+            logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
+            return
+          } else if (e instanceof AlreadySignedError) {
+            logger.info(`Already signed rewardedOnCycle ${rewardedOnCycle.transactionHash}`)
+            return
+          } else if (e instanceof AlreadyProcessedError) {
+            logger.info(
+              `rewardedOnCycle ${
+                rewardedOnCycle.transactionHash
+              } was already processed by other validators`
+            )
+            return
+          } else {
+            logger.error(e, 'Unknown error while processing transaction')
+            throw e
+          }
+        }
+
+        const data = await homeBridge.methods
+          .submitSignature(signature.signature, message)
+          .encodeABI({ from: config.validatorAddress })
+
+        txToSend.push({
+          data,
+          gasEstimate,
+          transactionReference: rewardedOnCycle.transactionHash,
+          to: homeBridgeAddress
+        })
       })
     )
 
