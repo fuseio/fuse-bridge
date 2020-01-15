@@ -34,6 +34,7 @@ function createMessage ({
 }
 
 function createNewSetMessage ({
+  foreignBridgeVersion,
   newSet,
   transactionHash,
   blockNumber,
@@ -47,17 +48,20 @@ function createNewSetMessage ({
   transactionHash = strip0x(transactionHash)
   assert.strictEqual(transactionHash.length, 32 * 2)
 
-  blockNumber = Web3Utils.numberToHex(blockNumber)
-  blockNumber = Web3Utils.padLeft(blockNumber, 32 * 2)
-
-  blockNumber = strip0x(blockNumber)
-  assert.strictEqual(blockNumber.length, 32 * 2)
-
   bridgeAddress = strip0x(bridgeAddress)
   assert.strictEqual(bridgeAddress.length, 20 * 2)
 
-  const message = `0x${transactionHash}${blockNumber}${bridgeAddress}${newSet.join('')}`
-  return message
+  if (foreignBridgeVersion > 1) {
+    blockNumber = Web3Utils.numberToHex(blockNumber)
+    blockNumber = Web3Utils.padLeft(blockNumber, 32 * 2)
+
+    blockNumber = strip0x(blockNumber)
+    assert.strictEqual(blockNumber.length, 32 * 2)
+
+    return `0x${transactionHash}${blockNumber}${bridgeAddress}${newSet.join('')}`
+  }
+
+  return `0x${transactionHash}${bridgeAddress}${newSet.join('')}`
 }
 
 function parseMessage (message) {

@@ -3,6 +3,7 @@ const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
 const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
 const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
+const eternalStorageProxyABI = require('../../../abis/EternalStorageProxy.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home, web3Foreign } = require('../../services/web3')
 const { createNewSetMessage } = require('../../utils/message')
@@ -29,6 +30,7 @@ function processInitiateChangeBuilder (config) {
   ) {
     const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
     const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
+    const foreignBridgeStorage = new web3Foreign.eth.Contract(eternalStorageProxyABI, foreignBridgeAddress)
 
     const txToSend = []
 
@@ -67,7 +69,9 @@ function processInitiateChangeBuilder (config) {
           `Processing initiateChange ${initiateChange.transactionHash}`
         )
 
+        const foreignBridgeVersion = await foreignBridgeStorage.methods.version().call()
         const message = createNewSetMessage({
+          foreignBridgeVersion,
           newSet: newSet,
           transactionHash: initiateChange.transactionHash,
           blockNumber,
