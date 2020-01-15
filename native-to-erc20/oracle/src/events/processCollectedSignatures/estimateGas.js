@@ -5,7 +5,7 @@ const {
   IncompatibleContractError,
   InvalidValidatorError
 } = require('../../utils/errors')
-const { parseMessage, parseNewSetMessage } = require('../../utils/message')
+const { parseMessage } = require('../../utils/message')
 const logger = require('../../services/logger').child({
   module: 'processCollectedSignatures:estimateGas'
 })
@@ -49,8 +49,8 @@ async function estimateGas ({
 
     // check if the message was already processed
     logger.debug('Check if the message was already processed')
-    let parsedMsg = parseMessage(message)
-    let alreadyProcessed = await foreignBridge.methods.relayedMessages(parsedMsg.txHash).call()
+    const parsedMsg = parseMessage(message)
+    const alreadyProcessed = await foreignBridge.methods.relayedMessages(parsedMsg.txHash).call()
     if (alreadyProcessed) {
       throw new AlreadyProcessedError()
     }

@@ -1,7 +1,7 @@
 require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
-const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
+const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home } = require('../../services/web3')
 const { createMessage } = require('../../utils/message')
@@ -11,14 +11,14 @@ const {
   AlreadySignedError,
   InvalidValidatorError
 } = require('../../utils/errors')
-const { EXIT_CODES, MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
+const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
 const { VALIDATOR_ADDRESS_PRIVATE_KEY } = process.env
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
 let expectedMessageLength = null
-let validatorContract = null
+let homeValidatorContract = null
 
 function processSignatureRequestsBuilder (config) {
   return async function processSignatureRequests (
@@ -33,12 +33,11 @@ function processSignatureRequestsBuilder (config) {
       expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
     }
 
-    if (validatorContract === null) {
+    if (homeValidatorContract === null) {
       rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await homeBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
-
-      validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
+      const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
+      rootLogger.debug({ homeValidatorContractAddress }, 'Validator contract address obtained')
+      homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
     }
 
     rootLogger.debug(`Processing ${signatureRequests.length} SignatureRequest events`)
@@ -50,10 +49,7 @@ function processSignatureRequestsBuilder (config) {
           eventTransactionHash: signatureRequest.transactionHash
         })
 
-        logger.info(
-          { sender: recipient, value, data },
-          `Processing signatureRequest ${signatureRequest.transactionHash}`
-        )
+        logger.info({ sender: recipient, value, data }, `Processing signatureRequest ${signatureRequest.transactionHash}`)
 
         let r = recipient
         if (data && web3Home.utils.isAddress(data)) {
@@ -76,7 +72,7 @@ function processSignatureRequestsBuilder (config) {
           gasEstimate = await estimateGas({
             web3: web3Home,
             homeBridge,
-            validatorContract,
+            validatorContract: homeValidatorContract,
             signature: signature.signature,
             message,
             address: config.validatorAddress
@@ -89,7 +85,7 @@ function processSignatureRequestsBuilder (config) {
             )
           } else if (e instanceof InvalidValidatorError) {
             logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
-            process.exit(EXIT_CODES.INCOMPATIBILITY)
+            return
           } else if (e instanceof AlreadySignedError) {
             logger.info(`Already signed signatureRequest ${signatureRequest.transactionHash}`)
             return

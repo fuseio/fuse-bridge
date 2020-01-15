@@ -34,8 +34,10 @@ function createMessage ({
 }
 
 function createNewSetMessage ({
+  foreignBridgeVersion,
   newSet,
   transactionHash,
+  blockNumber,
   bridgeAddress
 }) {
   for (let i = 0; i < newSet.length; i++) {
@@ -49,8 +51,17 @@ function createNewSetMessage ({
   bridgeAddress = strip0x(bridgeAddress)
   assert.strictEqual(bridgeAddress.length, 20 * 2)
 
-  const message = `0x${transactionHash}${bridgeAddress}${newSet.join('')}`
-  return message
+  if (foreignBridgeVersion > 1) {
+    blockNumber = Web3Utils.numberToHex(blockNumber)
+    blockNumber = Web3Utils.padLeft(blockNumber, 32 * 2)
+
+    blockNumber = strip0x(blockNumber)
+    assert.strictEqual(blockNumber.length, 32 * 2)
+
+    return `0x${transactionHash}${blockNumber}${bridgeAddress}${newSet.join('')}`
+  }
+
+  return `0x${transactionHash}${bridgeAddress}${newSet.join('')}`
 }
 
 function parseMessage (message) {
@@ -90,7 +101,11 @@ function parseNewSetMessage (message) {
   const txHashLength = 32 * 2
   const txHash = `0x${message.slice(txHashStart, txHashStart + txHashLength)}`
 
-  const contractAddressStart = txHashStart + txHashLength
+  const blockNumberStart = txHashStart + txHashLength
+  const blockNumberLength = 32 * 2
+  const blockNumber = `0x${message.slice(blockNumberStart, blockNumberStart + blockNumberLength)}`
+
+  const contractAddressStart = blockNumberStart + blockNumberLength
   const contractAddressLength = 40
   const contractAddress = `0x${message.slice(
     contractAddressStart,
@@ -108,6 +123,7 @@ function parseNewSetMessage (message) {
   return {
     newSet,
     txHash,
+    blockNumber,
     contractAddress
   }
 }

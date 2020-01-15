@@ -1,10 +1,11 @@
 require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
-const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
+const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
 const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home, web3Foreign } = require('../../services/web3')
+const { getBlockNumber } = require('../../tx/web3')
 const { signatureToVRS } = require('../../utils/message')
 const estimateGas = require('./estimateGas')
 const {
@@ -12,11 +13,12 @@ const {
   IncompatibleContractError,
   InvalidValidatorError
 } = require('../../utils/errors')
-const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
+const { MAX_CONCURRENT_EVENTS, MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY } = require('../../utils/constants')
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
-let validatorContract = null
+let homeValidatorContract = null
+let foreignValidatorContract = null
 
 function processCollectedSignaturesBuilder (config) {
   return async function processCollectedSignatures (
@@ -25,39 +27,54 @@ function processCollectedSignaturesBuilder (config) {
     foreignBridgeAddress
   ) {
     const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
-
-    const foreignBridge = new web3Foreign.eth.Contract(
-      config.foreignBridgeAbi,
-      foreignBridgeAddress
-    )
+    const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
 
     const txToSend = []
 
-    if (validatorContract === null) {
-      rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await foreignBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
+    if (homeValidatorContract === null) {
+      rootLogger.debug('Getting home validator contract address')
+      const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
+      rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
+      homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
+    }
 
-      validatorContract = new web3Foreign.eth.Contract(
-        foreignBridgeValidatorsABI,
-        validatorContractAddress
-      )
+    if (foreignValidatorContract === null) {
+      rootLogger.debug('Getting validator contract address')
+      const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
+      rootLogger.debug({ foreignValidatorContractAddress }, 'Validator contract address obtained')
+      foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
     rootLogger.debug(`Processing ${signatures.length} CollectedSignatures events`)
     const callbacks = signatures.map(colSignature =>
       limit(async () => {
-        const {
-          authorityResponsibleForRelay,
-          messageHash,
-          NumberOfCollectedSignatures
-        } = colSignature.returnValues
+        const { blockNumber } = colSignature
+        const { authorityResponsibleForRelay, messageHash, NumberOfCollectedSignatures } = colSignature.returnValues
 
         const logger = rootLogger.child({
           eventTransactionHash: colSignature.transactionHash
         })
 
-        if (authorityResponsibleForRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
+        let runProcess = true
+        if (authorityResponsibleForRelay !== web3Home.utils.toChecksumAddress(config.validatorAddress)) {
+          const currentBlockNumber = await getBlockNumber(web3Home)
+          if (currentBlockNumber > blockNumber + MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY) {
+            const validators = await homeValidatorContract.methods.getValidators().call()
+            const i = (currentBlockNumber - blockNumber) % validators.length % MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY
+            const nextAuthorityTryingToRelay = validators[i]
+            if (nextAuthorityTryingToRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
+              logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash} but is next in line after waiting for ${authorityResponsibleForRelay} too long`)
+            } else {
+              logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash}, waiting for ${authorityResponsibleForRelay} too long, next in line is ${nextAuthorityTryingToRelay}`)
+              runProcess = false
+            }
+          } else {
+            logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash}, waiting for ${authorityResponsibleForRelay}`)
+            runProcess = false
+          }
+        }
+
+        if (runProcess) {
           logger.info(`Processing CollectedSignatures ${colSignature.transactionHash}`)
           const message = await homeBridge.methods.message(messageHash).call()
           const expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
@@ -84,7 +101,7 @@ function processCollectedSignaturesBuilder (config) {
             logger.debug('Estimate gas')
             const result = await estimateGas({
               foreignBridge,
-              validatorContract,
+              validatorContract: foreignValidatorContract,
               v,
               r,
               s,
@@ -121,8 +138,6 @@ function processCollectedSignaturesBuilder (config) {
             transactionReference: colSignature.transactionHash,
             to: foreignBridgeAddress
           })
-        } else {
-          logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash}, waiting for ${authorityResponsibleForRelay}`)
         }
       })
     )

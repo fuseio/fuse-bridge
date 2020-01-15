@@ -13,5 +13,6 @@ module.exports = {
     GENERAL_ERROR: 1,
     INCOMPATIBILITY: 10,
     MAX_TIME_REACHED: 11
-  }
+  },
+  MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY: 10 * 60 / 5 // 10 mins
 }

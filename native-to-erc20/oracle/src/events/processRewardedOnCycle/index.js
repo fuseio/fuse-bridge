@@ -1,9 +1,10 @@
 require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
-const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
+const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
+const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
 const rootLogger = require('../../services/logger')
-const { web3Home } = require('../../services/web3')
+const { web3Home, web3Foreign } = require('../../services/web3')
 const { createMessage } = require('../../utils/message')
 const estimateGas = require('./estimateGas')
 const {
@@ -11,14 +12,15 @@ const {
   AlreadySignedError,
   InvalidValidatorError
 } = require('../../utils/errors')
-const { EXIT_CODES, MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
+const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
 const { VALIDATOR_ADDRESS_PRIVATE_KEY } = process.env
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
 let expectedMessageLength = null
-let validatorContract = null
+let homeValidatorContract = null
+let foreignValidatorContract = null
 
 function processRewardedOnCycleBuilder (config) {
   return async function processRewardedOnCycle (
@@ -27,18 +29,25 @@ function processRewardedOnCycleBuilder (config) {
     foreignBridgeAddress
   ) {
     const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
+    const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
     const txToSend = []
 
     if (expectedMessageLength === null) {
       expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
     }
 
-    if (validatorContract === null) {
-      rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await homeBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
+    if (homeValidatorContract === null) {
+      rootLogger.debug('Getting home validator contract address')
+      const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
+      rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
+      homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
+    }
 
-      validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
+    if (foreignValidatorContract === null) {
+      rootLogger.debug('Getting foreign validator contract address')
+      const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
+      rootLogger.debug({ foreignValidatorContractAddress }, 'Foreign validator contract address obtained')
+      foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
     rootLogger.debug(`Processing ${rewardedOnCycleEvents.length} RewardedOnCycle events`)
@@ -49,6 +58,12 @@ function processRewardedOnCycleBuilder (config) {
         const logger = rootLogger.child({
           eventTransactionHash: rewardedOnCycle.transactionHash
         })
+
+        const isForeignValidator = await foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
+        if (!isForeignValidator) {
+          logger.info(`Validator is not part of foreign validators, so not responsible for handling RewardedOnCycle ${rewardedOnCycle.transactionHash}`)
+          return
+        }
 
         logger.info(
           { value },
@@ -71,7 +86,7 @@ function processRewardedOnCycleBuilder (config) {
           gasEstimate = await estimateGas({
             web3: web3Home,
             homeBridge,
-            validatorContract,
+            validatorContract: homeValidatorContract,
             signature: signature.signature,
             message,
             address: config.validatorAddress
@@ -84,7 +99,7 @@ function processRewardedOnCycleBuilder (config) {
             )
           } else if (e instanceof InvalidValidatorError) {
             logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
-            process.exit(EXIT_CODES.INCOMPATIBILITY)
+            return
           } else if (e instanceof AlreadySignedError) {
             logger.info(`Already signed rewardedOnCycle ${rewardedOnCycle.transactionHash}`)
             return

@@ -20,6 +20,14 @@ contract BasicForeignBridge is EternalStorage {
         return boolStorage[keccak256(abi.encodePacked("relayedMessages", _txHash))];
     }
 
+    function setLastRelayedBlockNumber(uint256 _blockNumber) internal {
+        uintStorage[keccak256(abi.encodePacked("relayedMessagesLastBlockNumber"))] = _blockNumber;
+    }
+
+    function lastRelayedBlockNumber() public view returns(uint256) {
+        return uintStorage[keccak256(abi.encodePacked("relayedMessagesLastBlockNumber"))];
+    }
+
     function messageWithinLimits(uint256) internal view returns(bool);
 
     function onFailedMessage(address, uint256, bytes32) internal;

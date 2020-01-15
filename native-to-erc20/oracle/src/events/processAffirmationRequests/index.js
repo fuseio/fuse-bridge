@@ -2,8 +2,8 @@ require('dotenv').config()
 const rootLogger = require('../../services/logger')
 const { web3Home } = require('../../services/web3')
 const promiseLimit = require('promise-limit')
-const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
-const { EXIT_CODES, MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
+const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
+const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 const estimateGas = require('./estimateGas')
 const {
   AlreadyProcessedError,
@@ -14,7 +14,7 @@ const { HttpListProviderError } = require('http-list-provider')
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
-let validatorContract = null
+let homeValidatorContract = null
 
 function processAffirmationRequestsBuilder (config) {
   const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, config.homeBridgeAddress)
@@ -22,12 +22,11 @@ function processAffirmationRequestsBuilder (config) {
   return async function processAffirmationRequests (affirmationRequests) {
     const txToSend = []
 
-    if (validatorContract === null) {
+    if (homeValidatorContract === null) {
       rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await homeBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
-
-      validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
+      const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
+      rootLogger.debug({ homeValidatorContractAddress }, 'Validator contract address obtained')
+      homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
     }
 
     rootLogger.debug(`Processing ${affirmationRequests.length} AffirmationRequest events`)
@@ -50,7 +49,7 @@ function processAffirmationRequestsBuilder (config) {
           gasEstimate = await estimateGas({
             web3: web3Home,
             homeBridge,
-            validatorContract,
+            validatorContract: homeValidatorContract,
             recipient,
             value,
             txHash: affirmationRequest.transactionHash,
@@ -64,7 +63,7 @@ function processAffirmationRequestsBuilder (config) {
             )
           } else if (e instanceof InvalidValidatorError) {
             logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
-            process.exit(EXIT_CODES.INCOMPATIBILITY)
+            return
           } else if (e instanceof AlreadySignedError) {
             logger.info(`Already signed affirmationRequest ${affirmationRequest.transactionHash}`)
             return

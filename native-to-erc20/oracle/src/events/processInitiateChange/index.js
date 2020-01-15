@@ -1,9 +1,11 @@
 require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
-const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
+const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
+const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
+const eternalStorageProxyABI = require('../../../abis/EternalStorageProxy.abi')
 const rootLogger = require('../../services/logger')
-const { web3Home } = require('../../services/web3')
+const { web3Home, web3Foreign } = require('../../services/web3')
 const { createNewSetMessage } = require('../../utils/message')
 const estimateGas = require('./estimateGas')
 const {
@@ -11,13 +13,14 @@ const {
   AlreadySignedError,
   InvalidValidatorError
 } = require('../../utils/errors')
-const { EXIT_CODES, MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
+const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
 const { VALIDATOR_ADDRESS_PRIVATE_KEY } = process.env
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
-let validatorContract = null
+let homeValidatorContract = null
+let foreignValidatorContract = null
 
 function processInitiateChangeBuilder (config) {
   return async function processInitiateChange (
@@ -26,33 +29,52 @@ function processInitiateChangeBuilder (config) {
     foreignBridgeAddress
   ) {
     const homeBridge = new web3Home.eth.Contract(config.homeBridgeAbi, homeBridgeAddress)
+    const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
+    const foreignBridgeStorage = new web3Foreign.eth.Contract(eternalStorageProxyABI, foreignBridgeAddress)
+
     const txToSend = []
 
-    if (validatorContract === null) {
-      rootLogger.debug('Getting validator contract address')
-      const validatorContractAddress = await homeBridge.methods.validatorContract().call()
-      rootLogger.debug({ validatorContractAddress }, 'Validator contract address obtained')
+    if (homeValidatorContract === null) {
+      rootLogger.debug('Getting home validator contract address')
+      const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
+      rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
+      homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
+    }
 
-      validatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, validatorContractAddress)
+    if (foreignValidatorContract === null) {
+      rootLogger.debug('Getting foreign validator contract address')
+      const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
+      rootLogger.debug({ foreignValidatorContractAddress }, 'Foreign validator contract address obtained')
+      foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
     rootLogger.debug(`Processing ${initiateChangeEvents.length} InitiateChange events`)
     const callbacks = initiateChangeEvents.map(initiateChange =>
       limit(async () => {
-        const newSet = initiateChange.returnValues.newSet
+        const { blockNumber } = initiateChange
+        const { newSet } = initiateChange.returnValues
 
         const logger = rootLogger.child({
           eventTransactionHash: initiateChange.transactionHash
         })
+
+        const isForeignValidator = await foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
+        if (!isForeignValidator) {
+          logger.info(`Validator is not part of foreign validators, so not responsible for handling InitiateChange ${initiateChange.transactionHash}`)
+          return
+        }
 
         logger.info(
           { newSet },
           `Processing initiateChange ${initiateChange.transactionHash}`
         )
 
+        const foreignBridgeVersion = await foreignBridgeStorage.methods.version().call()
         const message = createNewSetMessage({
+          foreignBridgeVersion,
           newSet: newSet,
           transactionHash: initiateChange.transactionHash,
+          blockNumber,
           bridgeAddress: foreignBridgeAddress
         })
 
@@ -67,7 +89,7 @@ function processInitiateChangeBuilder (config) {
           gasEstimate = await estimateGas({
             web3: web3Home,
             homeBridge,
-            validatorContract,
+            validatorContract: homeValidatorContract,
             signature: signature.signature,
             message,
             address: config.validatorAddress
@@ -80,7 +102,7 @@ function processInitiateChangeBuilder (config) {
             )
           } else if (e instanceof InvalidValidatorError) {
             logger.fatal({ address: config.validatorAddress }, 'Invalid validator')
-            process.exit(EXIT_CODES.INCOMPATIBILITY)
+            return
           } else if (e instanceof AlreadySignedError) {
             logger.info(`Already signed initiateChange ${initiateChange.transactionHash}`)
             return
