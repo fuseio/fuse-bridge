@@ -4,7 +4,6 @@ const { HttpListProviderError } = require('http-list-provider')
 const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
 const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
 const rootLogger = require('../../services/logger')
-const { redis } = require('../../services/redisClient')
 const { web3Home, web3Foreign } = require('../../services/web3')
 const { getBlockNumber } = require('../../tx/web3')
 const { signatureToVRS } = require('../../utils/message')
@@ -58,22 +57,11 @@ function processCollectedSignaturesBuilder (config) {
 
         let runProcess = true
         if (authorityResponsibleForRelay !== web3Home.utils.toChecksumAddress(config.validatorAddress)) {
-          // console.log({ authorityResponsibleForRelay })
           const currentBlockNumber = await getBlockNumber(web3Home)
-          // console.log({ currentBlockNumber })
-          // console.log({ blockNumber })
-          const key = `${config.id}:lastAuthorityTryingToRelay:${colSignature.transactionHash}`
-          // console.log({ key })
           if (currentBlockNumber > blockNumber + MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY) {
             const validators = await homeValidatorContract.methods.getValidators().call()
-            // console.log({ validators })
-            const lastAuthorityTryingToRelay = await redis.get(key)
-            // console.log({ lastAuthorityTryingToRelay })
-            const nextAuthorityTryingToRelayIndex = (lastAuthorityTryingToRelay ? validators.indexOf(web3Home.utils.toChecksumAddress(lastAuthorityTryingToRelay)) : validators.indexOf(authorityResponsibleForRelay)) + 1
-            // console.log({ nextAuthorityTryingToRelayIndex })
-            const nextAuthorityTryingToRelay = validators[nextAuthorityTryingToRelayIndex === validators.length ? 0 : nextAuthorityTryingToRelayIndex]
-            // console.log({ nextAuthorityTryingToRelay })
-            await redis.set(key, nextAuthorityTryingToRelay)
+            const i = (currentBlockNumber - blockNumber) % validators.length % MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY
+            const nextAuthorityTryingToRelay = validators[i]
             if (nextAuthorityTryingToRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
               logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash} but is next in line after waiting for ${authorityResponsibleForRelay} too long`)
             } else {
