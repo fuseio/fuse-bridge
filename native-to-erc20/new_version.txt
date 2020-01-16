@@ -1,4 +1,4 @@
-TAG = MAJOR.MINOR.PATCH
+TAG = 2.0.0
 
 cd WORKING_DIR/fuse-bridge/native-to-erc20/oracle
 
@@ -11,4 +11,5 @@ docker push fusenet/native-to-erc20-oracle:TAG
 update TAG in:
   WORKING_DIR/fuse-bridge/native-to-erc20/oracle/docker-compose.yml
   WORKING_DIR/fuse-bridge/native-to-erc20/oracle/docker-compose.keystore.yml
+  WORKING_DIR/fuse-bridge/native-to-erc20/oracle/package.json
   WORKING_DIR/fuse-network/scripts/quickstart.sh
