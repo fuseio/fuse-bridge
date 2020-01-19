@@ -8,7 +8,7 @@ import "../libraries/Message.sol";
 contract BasicHomeBridge is EternalStorage, Validatable {
     using SafeMath for uint256;
 
-    event UserRequestForSignature(address recipient, uint256 value, bytes data);
+    event UserRequestForSignature(address recipient, uint256 value);
     event AffirmationCompleted (address recipient, uint256 value, bytes32 transactionHash);
     event SignedForUserRequest(address indexed signer, bytes32 messageHash);
     event SignedForAffirmation(address indexed signer, bytes32 transactionHash);

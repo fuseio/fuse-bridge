@@ -101,8 +101,7 @@ contract('HomeBridge_Native_to_ERC20', async (accounts) => {
       logs[0].event.should.be.equal('UserRequestForSignature')
       logs[0].args.should.be.deep.equal({
         recipient: accounts[1],
-        value: new web3.BigNumber(1),
-        data: '0x'
+        value: new web3.BigNumber(1)
       })
       await homeContract.setDailyLimit(4).should.be.fulfilled;
       await homeContract.sendTransaction({
