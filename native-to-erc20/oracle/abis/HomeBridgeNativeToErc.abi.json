@@ -649,11 +649,6 @@
         "indexed": false,
         "name": "value",
         "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "name": "data",
-        "type": "bytes"
       }
     ],
     "name": "UserRequestForSignature",
