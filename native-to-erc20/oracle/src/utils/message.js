@@ -64,6 +64,30 @@ function createNewSetMessage ({
   return `0x${transactionHash}${bridgeAddress}${newSet.join('')}`
 }
 
+function createUpgradeBridgeMessage ({
+  contractType,
+  contractAddress,
+  transactionHash,
+  bridgeAddress
+}) {
+  contractType = Web3Utils.numberToHex(contractType)
+  contractType = Web3Utils.padLeft(contractType, 32 * 2)
+
+  contractType = strip0x(contractType)
+  assert.strictEqual(contractType.length, 32 * 2)
+
+  contractAddress = strip0x(contractAddress)
+  assert.strictEqual(contractAddress.length, 20 * 2)
+
+  transactionHash = strip0x(transactionHash)
+  assert.strictEqual(transactionHash.length, 32 * 2)
+
+  bridgeAddress = strip0x(bridgeAddress)
+  assert.strictEqual(bridgeAddress.length, 20 * 2)
+
+  return `0x${transactionHash}${bridgeAddress}${contractType}${contractAddress}`
+}
+
 function parseMessage (message) {
   message = strip0x(message)
 
@@ -128,6 +152,33 @@ function parseNewSetMessage (message) {
   }
 }
 
+function parseUpgradeBridgeMessage (message) {
+  message = strip0x(message)
+
+  const txHashStart = 0
+  const txHashLength = 32 * 2
+  const txHash = `0x${message.slice(txHashStart, txHashStart + txHashLength)}`
+
+  const bridgeAddressStart = txHashStart + txHashLength
+  const bridgeAddressLength = 20 * 2
+  const bridgeAddress = `0x${message.slice(bridgeAddressStart, bridgeAddressStart + bridgeAddressLength)}`
+
+  const contractTypeStart = bridgeAddressStart + bridgeAddressLength
+  const contractTypeLength = 32 * 2
+  const contractType = `0x${message.slice(contractTypeStart, contractTypeStart + contractTypeLength)}`
+
+  const contractAddressStart = contractTypeStart + contractTypeLength
+  const contractAddressLength = 20 * 2
+  const contractAddress = `0x${message.slice(contractAddressStart, contractAddressStart + contractAddressLength)}`
+
+  return {
+    contractType,
+    contractAddress,
+    txHash,
+    bridgeAddress
+  }
+}
+
 function signatureToVRS (signature) {
   assert.strictEqual(signature.length, 2 + 32 * 2 + 32 * 2 + 2)
   signature = strip0x(signature)
@@ -140,7 +191,9 @@ function signatureToVRS (signature) {
 module.exports = {
   createMessage,
   createNewSetMessage,
+  createUpgradeBridgeMessage,
   parseMessage,
   parseNewSetMessage,
+  parseUpgradeBridgeMessage,
   signatureToVRS
 }

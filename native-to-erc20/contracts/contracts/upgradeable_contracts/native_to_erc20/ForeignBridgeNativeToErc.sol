@@ -6,6 +6,7 @@ import "../../ERC677Receiver.sol";
 import "../BasicForeignBridge.sol";
 import "./ForeignValidatable.sol";
 import "../ERC677Bridge.sol";
+import "../../upgradeability/EternalStorageProxy.sol";
 
 contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBridge, ERC677Bridge, ForeignValidatable {
 
@@ -13,6 +14,8 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
     event UserRequestForAffirmation(address recipient, uint256 value);
 
     event RelayedNewSetMessage(address[] newSet, bytes32 transactionHash);
+
+    event RelayedUpgradeBridgeMessage(uint256 contractType, address contractAddress, bytes32 txHash);
 
     function initialize(
         address _validatorContract,
@@ -90,6 +93,22 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
         setLastRelayedBlockNumber(blockNumber);
         require(validatorContract().setValidators(newSet));
         emit RelayedNewSetMessage(newSet, txHash);
+    }
+
+    function executeUpgradeBridgeSignatures(uint8[] vs, bytes32[] rs, bytes32[] ss, bytes message) external {
+        Message.hasEnoughValidSignaturesForeignBridgeValidator(message, vs, rs, ss, validatorContract());
+        bytes32 txHash;
+        address bridgeAddress;
+        uint256 contractType;
+        address contractAddress;
+        (contractType, contractAddress, txHash, bridgeAddress) = Message.parseUpgradeBridgeMessage(message);
+        require(bridgeAddress == address(this));
+        require (contractType == 6); // see https://github.com/fuseio/fuse-network/blob/master/contracts/ProxyStorage.sol#L17
+        require(!relayedMessages(txHash));
+        setRelayedMessages(txHash, true);
+        uint256 _version = EternalStorageProxy(this).version() + 1;
+        EternalStorageProxy(this).upgradeTo(_version, contractAddress);
+        emit RelayedUpgradeBridgeMessage(contractType, contractAddress, txHash);
     }
 
     function onExecuteMessage(address _recipient, uint256 _amount) internal returns(bool){

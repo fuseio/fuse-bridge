@@ -13,6 +13,8 @@ contract BasicHomeBridge is EternalStorage, Validatable {
     event SignedForUserRequest(address indexed signer, bytes32 messageHash);
     event SignedForAffirmation(address indexed signer, bytes32 transactionHash);
     event CollectedSignatures(address authorityResponsibleForRelay, bytes32 messageHash, uint256 NumberOfCollectedSignatures);
+    event CollectedBridgeUpgradeSignatures(address authorityResponsibleForRelay, bytes32 messageHash, uint256 NumberOfCollectedSignatures);
+    event RelayedUpgradeBridgeMessage(uint256 contractType, address contractAddress, bytes32 txHash);
 
     function executeAffirmation(address recipient, uint256 value, bytes32 transactionHash) external onlyValidator {
         if (affirmationWithinLimits(value)) {
@@ -71,6 +73,21 @@ contract BasicHomeBridge is EternalStorage, Validatable {
         if (signed >= reqSigs) {
             setNumMessagesSigned(hashMsg, markAsProcessed(signed));
             emit CollectedSignatures(msg.sender, hashMsg, reqSigs);
+        }
+    }
+
+    function submitSignatureOfBridgeUpgrade(bytes signature, bytes message) external onlyValidator {
+        // ensure that `signature` is really `message` signed by `msg.sender`
+        require(msg.sender == Message.recoverAddressFromSignedMessage(signature, message, true));
+
+        bytes32 hashMsg = keccak256(abi.encodePacked(message));
+
+        uint256 signed = submitSignatureInternal(signature, message, hashMsg);
+
+        uint256 reqSigs = requiredSignatures();
+        if (signed >= reqSigs) {
+            setNumMessagesSigned(hashMsg, markAsProcessed(signed));
+            emit CollectedBridgeUpgradeSignatures(msg.sender, hashMsg, reqSigs);
         }
     }
 
@@ -176,5 +193,13 @@ contract BasicHomeBridge is EternalStorage, Validatable {
     }
 
     function onFailedAffirmation(address, uint256, bytes32) internal {
+    }
+
+    function setRelayedMessages(bytes32 _txHash, bool _status) internal {
+        boolStorage[keccak256(abi.encodePacked("relayedMessages", _txHash))] = _status;
+    }
+
+    function relayedMessages(bytes32 _txHash) public view returns(bool) {
+        return boolStorage[keccak256(abi.encodePacked("relayedMessages", _txHash))];
     }
 }

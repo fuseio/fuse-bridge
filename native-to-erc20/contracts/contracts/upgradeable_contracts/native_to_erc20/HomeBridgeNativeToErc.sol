@@ -5,6 +5,7 @@ import "../../libraries/Message.sol";
 import "../BasicBridge.sol";
 import "../../upgradeability/EternalStorage.sol";
 import "../BasicHomeBridge.sol";
+import "../../upgradeability/EternalStorageProxy.sol";
 
 contract Sacrifice {
     constructor(address _recipient) public payable {
@@ -74,5 +75,21 @@ contract HomeBridgeNativeToErc is EternalStorage, BasicBridge, BasicHomeBridge {
 
     function onFailedAffirmation(address _recipient, uint256 _value, bytes32 _txHash) internal {
         revert();
+    }
+
+    function executeUpgradeBridgeSignatures(uint8[] vs, bytes32[] rs, bytes32[] ss, bytes message) external {
+        Message.hasEnoughValidSignatures(message, vs, rs, ss, validatorContract());
+        bytes32 txHash;
+        address bridgeAddress;
+        uint256 contractType;
+        address contractAddress;
+        (contractType, contractAddress, txHash, bridgeAddress) = Message.parseUpgradeBridgeMessage(message);
+        require(bridgeAddress == address(this));
+        require (contractType == 5); // see https://github.com/fuseio/fuse-network/blob/master/contracts/ProxyStorage.sol#L17
+        require(!relayedMessages(txHash));
+        setRelayedMessages(txHash, true);
+        uint256 _version = EternalStorageProxy(this).version() + 1;
+        EternalStorageProxy(this).upgradeTo(_version, contractAddress);
+        emit RelayedUpgradeBridgeMessage(contractType, contractAddress, txHash);
     }
 }
