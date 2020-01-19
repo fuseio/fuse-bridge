@@ -49,7 +49,7 @@ function processCollectedSignaturesBuilder (config) {
     const callbacks = signatures.map(colSignature =>
       limit(async () => {
         const { blockNumber } = colSignature
-        const { authorityResponsibleForRelay, messageHash, NumberOfCollectedSignatures } = colSignature.returnValues
+        const { authorityResponsibleForRelay, messageHash, numberOfCollectedSignatures, sigType } = colSignature.returnValues
 
         const logger = rootLogger.child({
           eventTransactionHash: colSignature.transactionHash
@@ -80,7 +80,7 @@ function processCollectedSignaturesBuilder (config) {
           const expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
 
           const requiredSignatures = []
-          requiredSignatures.length = NumberOfCollectedSignatures
+          requiredSignatures.length = numberOfCollectedSignatures
           requiredSignatures.fill(0)
 
           const [v, r, s] = [[], [], []]
@@ -96,22 +96,26 @@ function processCollectedSignaturesBuilder (config) {
 
           await Promise.all(signaturePromises)
 
-          let gasEstimate, methodName
+          let gasEstimate, methodName, bridge
           try {
             logger.debug('Estimate gas')
             const result = await estimateGas({
+              homeBridge,
               foreignBridge,
-              validatorContract: foreignValidatorContract,
+              foreignValidatorContract,
+              homeValidatorContract,
+              message,
+              numberOfCollectedSignatures,
+              sigType,
               v,
               r,
               s,
-              message,
-              numberOfCollectedSignatures: NumberOfCollectedSignatures,
               expectedMessageLength
             })
             logger.info({ result }, 'Gas estimated')
             gasEstimate = result.gasEstimate
             methodName = result.methodName
+            bridge = result.bridge
           } catch (e) {
             if (e instanceof HttpListProviderError) {
               throw new Error(
@@ -131,12 +135,12 @@ function processCollectedSignaturesBuilder (config) {
               throw e
             }
           }
-          const data = await foreignBridge.methods[methodName](v, r, s, message).encodeABI()
+          const data = await bridge.methods[methodName](v, r, s, message).encodeABI()
           txToSend.push({
             data,
             gasEstimate,
             transactionReference: colSignature.transactionHash,
-            to: foreignBridgeAddress
+            to: bridge.address
           })
         }
       })

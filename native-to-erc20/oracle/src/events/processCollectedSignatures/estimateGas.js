@@ -5,7 +5,7 @@ const {
   IncompatibleContractError,
   InvalidValidatorError
 } = require('../../utils/errors')
-const { parseMessage } = require('../../utils/message')
+const { parseMessage, parseNewSetMessage, parseUpgradeBridgeMessage } = require('../../utils/message')
 const logger = require('../../services/logger').child({
   module: 'processCollectedSignatures:estimateGas'
 })
@@ -13,34 +13,63 @@ const logger = require('../../services/logger').child({
 const web3 = new Web3()
 const { toBN } = Web3.utils
 
+let gasEstimate, methodName, bridge, parsedMsg, validatorContract
+
 async function estimateGas ({
+  homeBridge,
   foreignBridge,
-  validatorContract,
+  homeValidatorContract,
+  foreignValidatorContract,
   message,
   numberOfCollectedSignatures,
+  sigType,
   v,
   r,
   s,
   expectedMessageLength
 }) {
   try {
-    let gasEstimate, methodName
-    if (message && message.length !== 2 + 2 * expectedMessageLength) { /* see ../../utils/message.js#createMessage */
-      logger.debug('foreignBridge.methods.executeNewSetSignatures')
-      gasEstimate = await foreignBridge.methods
-        .executeNewSetSignatures(v, r, s, message)
-        .estimateGas()
-      methodName = 'executeNewSetSignatures'
-    } else {
-      logger.debug('foreignBridge.methods.executeSignatures')
-      gasEstimate = await foreignBridge.methods
-        .executeSignatures(v, r, s, message)
-        .estimateGas()
-      methodName = 'executeSignatures'
+    bridge = foreignBridge
+    validatorContract = foreignValidatorContract
+    switch (sigType) {
+      case 0:
+        logger.debug('foreignBridge.methods.executeSignatures')
+        parsedMsg = parseMessage(message)
+        gasEstimate = await foreignBridge.methods
+          .executeSignatures(v, r, s, message)
+          .estimateGas()
+        methodName = 'executeSignatures'
+        break
+      case 1:
+        logger.debug('foreignBridge.methods.executeNewSetSignatures')
+        parsedMsg = parseNewSetMessage(message)
+        gasEstimate = await foreignBridge.methods
+          .executeNewSetSignatures(v, r, s, message)
+          .estimateGas()
+        methodName = 'executeNewSetSignatures'
+        break
+      case 2:
+        logger.debug('foreignBridge.methods.executeUpgradeBridgeSignatures')
+        parsedMsg = parseUpgradeBridgeMessage(message)
+        if (parsedMsg.bridgeAddress === homeBridge) {
+          gasEstimate = await homeBridge.methods
+            .executeUpgradeBridgeSignatures(v, r, s, message)
+            .estimateGas()
+          methodName = 'executeUpgradeBridgeSignatures'
+          bridge = homeBridge
+          validatorContract = homeValidatorContract
+        } else if (parsedMsg.bridgeAddress === foreignBridge) {
+          gasEstimate = await foreignBridge.methods
+            .executeUpgradeBridgeSignatures(v, r, s, message)
+            .estimateGas()
+          methodName = 'executeUpgradeBridgeSignatures'
+        }
+        break
     }
     return {
       gasEstimate,
-      methodName
+      methodName,
+      bridge
     }
   } catch (e) {
     if (e instanceof HttpListProviderError) {
@@ -49,8 +78,7 @@ async function estimateGas ({
 
     // check if the message was already processed
     logger.debug('Check if the message was already processed')
-    const parsedMsg = parseMessage(message)
-    const alreadyProcessed = await foreignBridge.methods.relayedMessages(parsedMsg.txHash).call()
+    const alreadyProcessed = await bridge.methods.relayedMessages(parsedMsg.txHash).call()
     if (alreadyProcessed) {
       throw new AlreadyProcessedError()
     }

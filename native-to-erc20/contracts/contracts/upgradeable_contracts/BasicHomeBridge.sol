@@ -8,12 +8,17 @@ import "../libraries/Message.sol";
 contract BasicHomeBridge is EternalStorage, Validatable {
     using SafeMath for uint256;
 
+    enum SignatureTypes {
+        Default,
+        NewSet,
+        BridgeUpgrade
+    }
+
     event UserRequestForSignature(address recipient, uint256 value);
     event AffirmationCompleted (address recipient, uint256 value, bytes32 transactionHash);
     event SignedForUserRequest(address indexed signer, bytes32 messageHash);
     event SignedForAffirmation(address indexed signer, bytes32 transactionHash);
-    event CollectedSignatures(address authorityResponsibleForRelay, bytes32 messageHash, uint256 NumberOfCollectedSignatures);
-    event CollectedBridgeUpgradeSignatures(address authorityResponsibleForRelay, bytes32 messageHash, uint256 NumberOfCollectedSignatures);
+    event CollectedSignatures(address authorityResponsibleForRelay, bytes32 messageHash, uint256 numberOfCollectedSignatures, uint256 sigType);
     event RelayedUpgradeBridgeMessage(uint256 contractType, address contractAddress, bytes32 txHash);
 
     function executeAffirmation(address recipient, uint256 value, bytes32 transactionHash) external onlyValidator {
@@ -57,7 +62,7 @@ contract BasicHomeBridge is EternalStorage, Validatable {
         uint256 reqSigs = requiredSignatures();
         if (signed >= reqSigs) {
             setNumMessagesSigned(hashMsg, markAsProcessed(signed));
-            emit CollectedSignatures(msg.sender, hashMsg, reqSigs);
+            emit CollectedSignatures(msg.sender, hashMsg, reqSigs, SignatureTypes.Default);
         }
     }
 
@@ -72,7 +77,7 @@ contract BasicHomeBridge is EternalStorage, Validatable {
         uint256 reqSigs = requiredSignatures();
         if (signed >= reqSigs) {
             setNumMessagesSigned(hashMsg, markAsProcessed(signed));
-            emit CollectedSignatures(msg.sender, hashMsg, reqSigs);
+            emit CollectedSignatures(msg.sender, hashMsg, reqSigs, SignatureTypes.NewSet);
         }
     }
 
@@ -87,7 +92,7 @@ contract BasicHomeBridge is EternalStorage, Validatable {
         uint256 reqSigs = requiredSignatures();
         if (signed >= reqSigs) {
             setNumMessagesSigned(hashMsg, markAsProcessed(signed));
-            emit CollectedBridgeUpgradeSignatures(msg.sender, hashMsg, reqSigs);
+            emit CollectedSignatures(msg.sender, hashMsg, reqSigs, SignatureTypes.BridgeUpgrade);
         }
     }
 
