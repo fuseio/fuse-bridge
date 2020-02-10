@@ -81,6 +81,10 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         emit ForeignBridgeDeployed(foreignBridge, bridgeValidators, _erc20Token, block.number);
     }
 
+    function registerForeignBridge(address _foreignBridge, address _foreignValidators, address _erc20Token, uint256 _blockNumber) public onlyOwner {
+        emit ForeignBridgeDeployed(_foreignBridge, _foreignValidators, _erc20Token, _blockNumber);
+    }
+
     function foreignBridgeErcToErcImplementation() public view returns(address) {
         return addressStorage[keccak256(abi.encodePacked("foreignBridgeErcToErcImplementation"))];
     }
