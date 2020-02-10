@@ -7,7 +7,7 @@ import "./BasicBridgeFactory.sol";
 
 contract ForeignBridgeFactory is BasicBridgeFactory {
 
-    event ForeignBridgeDeployed(address indexed _foreignBridge, address indexed _foreignValidators, uint256 _blockNumber);
+    event ForeignBridgeDeployed(address indexed _foreignBridge, address indexed _foreignValidators, address _foreignToken, uint256 _blockNumber);
 
     function initialize(address _owner,
             address _bridgeValidatorsImplementation,
@@ -78,7 +78,7 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(foreignBridgeProxyOwner());
         // emit event
-        emit ForeignBridgeDeployed(foreignBridge, bridgeValidators, block.number);
+        emit ForeignBridgeDeployed(foreignBridge, bridgeValidators, _erc20Token, block.number);
     }
 
     function foreignBridgeErcToErcImplementation() public view returns(address) {
