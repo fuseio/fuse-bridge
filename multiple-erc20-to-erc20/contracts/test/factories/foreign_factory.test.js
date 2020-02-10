@@ -91,12 +91,14 @@ contract('ForeignBridgeFactory', async (accounts) => {
 
       ZERO_ADDRESS.should.not.be.equal(args._foreignBridge)
       ZERO_ADDRESS.should.not.be.equal(args._foreignValidators)
+      ZERO_ADDRESS.should.not.be.equal(args._foreignToken)
       args._blockNumber.should.be.bignumber.gte(0)
 
       let foreignBridge = await ForeignBridge.at(args._foreignBridge)
       true.should.be.equal(await foreignBridge.isInitialized())
       args._foreignValidators.should.be.equal(await foreignBridge.validatorContract())
       token.address.should.be.equal(await foreignBridge.erc20token())
+      args._foreignToken.should.be.equal(await foreignBridge.erc20token())
       const deployedAtBlock = await foreignBridge.deployedAtBlock()
       deployedAtBlock.should.be.bignumber.above(0)
       requiredBlockConfirmations.should.be.bignumber.equal(await foreignBridge.requiredBlockConfirmations())
@@ -117,12 +119,14 @@ contract('ForeignBridgeFactory', async (accounts) => {
 
       ZERO_ADDRESS.should.not.be.equal(args._foreignBridge)
       ZERO_ADDRESS.should.not.be.equal(args._foreignValidators)
+      ZERO_ADDRESS.should.not.be.equal(args._foreignToken)
       args._blockNumber.should.be.bignumber.gte(0)
 
       let foreignBridge = await ForeignBridge.at(args._foreignBridge)
       true.should.be.equal(await foreignBridge.isInitialized())
       args._foreignValidators.should.be.equal(await foreignBridge.validatorContract())
       token.address.should.be.equal(await foreignBridge.erc20token())
+      args._foreignToken.should.be.equal(await foreignBridge.erc20token())
       const deployedAtBlock = await foreignBridge.deployedAtBlock()
       deployedAtBlock.should.be.bignumber.above(0)
       requiredBlockConfirmations.should.be.bignumber.equal(await foreignBridge.requiredBlockConfirmations())
