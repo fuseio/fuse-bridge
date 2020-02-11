@@ -40,13 +40,8 @@ async function getBridges () {
   const { foreignBridgeErcToErcs }  = await graphClientForeign.request(foreignQuery)
   console.log(foreignBridgeErcToErcs.length)
   const bridgesDict = lodash.keyBy(foreignBridgeErcToErcs, 'address')
-  // for (const mapping of bridgeMappings) {
-  //   if ()
-  // }
   return bridgeMappings.filter(mapping => !bridgesDict[mapping.foreignBridge])
 }
-
-// getBridges()
 
 async function registerAll() {
   const bridgeMappingsToRegister = await getBridges()
