@@ -43,7 +43,8 @@ const homeConfig = {
   requiredBlockConfirmations: toBN(process.env.HOME_REQUIRED_BLOCK_CONFIRMATIONS || 1),
   pollingInterval: process.env.HOME_POLLING_INTERVAL,
   web3: web3Home,
-  graphClient: graphClientHome
+  graphClient: graphClientHome,
+  graphOriginNetwork: process.env.GRAPH_ORIGIN_NETWORK
 }
 
 const foreignConfig = {
@@ -53,12 +54,14 @@ const foreignConfig = {
   requiredBlockConfirmations: toBN(process.env.FOREIGN_REQUIRED_BLOCK_CONFIRMATIONS || 2),
   pollingInterval: process.env.FOREIGN_POLLING_INTERVAL,
   web3: web3Foreign,
-  graphClient: graphClientForeign
+  graphClient: graphClientForeign,
+  graphOriginNetwork: process.env.GRAPH_ORIGIN_NETWORK
 }
 
 const bridgeMapperConfig = {
   web3: web3Home,
   graphClient: graphClientHome,
+  graphOriginNetwork: process.env.GRAPH_ORIGIN_NETWORK
   eventContractAddress: process.env.HOME_BRIDGE_MAPPER_ADDRESS,
   eventAbi: bridgeMapperAbi,
   eventFilter: {},
