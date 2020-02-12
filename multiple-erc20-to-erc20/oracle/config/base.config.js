@@ -30,7 +30,6 @@ if (!VALIDATOR_ADDRESS_PRIVATE_KEY) {
 const bridgeConfig = {
   homeBridgeAbi: homeErcErcAbi,
   foreignBridgeAbi: foreignErcErcAbi,
-  eventFilter: {},
   validatorAddress: VALIDATOR_ADDRESS || privateKeyToAddress(VALIDATOR_ADDRESS_PRIVATE_KEY),
   maxProcessingTime,
   deployedBridgesRedisKey: process.env.DEPLOYED_BRIDGES_REDIS_KEY || 'deployed:bridges'
@@ -38,7 +37,6 @@ const bridgeConfig = {
 
 const homeConfig = {
   eventAbi: homeErcErcAbi,
-  bridgeAbi: homeErcErcAbi,
   startBlock: toBN(process.env.HOME_START_BLOCK || 0),
   requiredBlockConfirmations: toBN(process.env.HOME_REQUIRED_BLOCK_CONFIRMATIONS || 1),
   pollingInterval: process.env.HOME_POLLING_INTERVAL,
@@ -49,7 +47,6 @@ const homeConfig = {
 
 const foreignConfig = {
   eventAbi: foreignErcErcAbi,
-  bridgeAbi: foreignErcErcAbi,
   startBlock: toBN(process.env.FOREIGN_START_BLOCK || 0),
   requiredBlockConfirmations: toBN(process.env.FOREIGN_REQUIRED_BLOCK_CONFIRMATIONS || 2),
   pollingInterval: process.env.FOREIGN_POLLING_INTERVAL,
@@ -61,10 +58,8 @@ const foreignConfig = {
 const bridgeMapperConfig = {
   web3: web3Home,
   graphClient: graphClientHome,
-  graphOriginNetwork: process.env.GRAPH_ORIGIN_NETWORK
-  eventContractAddress: process.env.HOME_BRIDGE_MAPPER_ADDRESS,
+  graphOriginNetwork: process.env.GRAPH_ORIGIN_NETWORK,
   eventAbi: bridgeMapperAbi,
-  eventFilter: {},
   requiredBlockConfirmations: toBN(1),
   pollingInterval: process.env.HOME_BRIDGE_MAPPER_POLLING_INTERVAL,
   startBlock: toBN(process.env.HOME_BRIDGE_MAPPER_START_BLOCK || 0),
