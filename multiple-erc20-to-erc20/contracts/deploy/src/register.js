@@ -5,17 +5,18 @@ const { sendRawTxForeign, privateKeyToAddress } = require('./deploymentUtils')
 const { GraphQLClient } = require('graphql-request')
 const lodash = require('lodash')
 
-const HOME_GRAPH_URL = 'https://graph.fuse.io/subgraphs/name/fuseio/fuse'
-const FOREIGN_GRAPH_URL = 'https://graph.fuse.io/subgraphs/name/fuseio/fuse-ropsten'
-const graphClientHome = new GraphQLClient(HOME_GRAPH_URL)
-const graphClientForeign = new GraphQLClient(FOREIGN_GRAPH_URL)
-
 const {
   FOREIGN_FACTORY_ADDRESS,
   DEPLOYMENT_ACCOUNT_PRIVATE_KEY,
   DRY_RUN,
-  CHUNK_SIZE
+  CHUNK_SIZE,
+  ETHEREUM_NETWORK
 } = process.env
+
+const HOME_GRAPH_URL = 'https://graph.fuse.io/subgraphs/name/fuseio/fuse'
+const FOREIGN_GRAPH_URL = `https://graph.fuse.io/subgraphs/name/fuseio/fuse-${ETHEREUM_NETWORK}`
+const graphClientHome = new GraphQLClient(HOME_GRAPH_URL)
+const graphClientForeign = new GraphQLClient(FOREIGN_GRAPH_URL)
 
 const factoryContract = new web3Foreign.eth.Contract(ForeignBridgeFactory, FOREIGN_FACTORY_ADDRESS)
 
@@ -51,7 +52,7 @@ async function registerBridge({ foreignBridge, foreignToken, foreignStartBlock }
 }
 
 async function getBridges () {
-  const query = `{bridgeMappings(first: 1000, where: {originNetwork: "ropsten"}) {id, blockNumber, txHash, key, homeBridge, homeToken, homeStartBlock, foreignBridge, foreignToken, foreignStartBlock}}`
+  const query = `{bridgeMappings(first: 1000, where: {originNetwork: "${ETHEREUM_NETWORK}"}) {id, blockNumber, txHash, key, homeBridge, homeToken, homeStartBlock, foreignBridge, foreignToken, foreignStartBlock}}`
   const { bridgeMappings } = await graphClientHome.request(query)
   console.log(`found ${bridgeMappings.length} mappings on fuse`)
 
