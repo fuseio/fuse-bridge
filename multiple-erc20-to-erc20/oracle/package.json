@@ -1,6 +1,6 @@
 {
   "name": "multiple-erc20-to-erc20-bridge-oracle",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "",
   "scripts": {
     "watcher:signature-request": "./scripts/start-worker.sh watcher signature-request-watcher",

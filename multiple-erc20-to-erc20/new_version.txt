@@ -1,4 +1,4 @@
-TAG = MAJOR.MINOR.PATCH
+TAG = 1.0.2
 
 cd WORKING_DIR/fuse-bridge/multiple-erc20-to-erc20/oracle
 
