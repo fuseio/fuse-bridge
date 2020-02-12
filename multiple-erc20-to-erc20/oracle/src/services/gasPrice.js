@@ -44,7 +44,6 @@ let fetchGasPriceInterval = null
 async function start (chainId) {
   clearInterval(fetchGasPriceInterval)
 
-  let updateInterval = null
   if (chainId === 'home') {
     cachedGasPrice = HOME_DEFAULT_GAS_PRICE
   } else if (chainId === 'foreign') {
