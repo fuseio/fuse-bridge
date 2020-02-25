@@ -24,17 +24,23 @@ function processTransfersBuilder (config) {
     rootLogger.debug(`Starting to process ${transferEvents.length} Transfer events`)
 
     const uniqueTransferEvents = {}
+    let transfers = []
     transferEvents.forEach(t => {
-      if (uniqueTransferEvents[t.txHash]) {
-        const tx = uniqueTransferEvents[t.txHash]
-        if (tx.txHash === t.txHash && tx.from === t.from && tx.to === t.to && tx.value === t.value && t.data) {
-          uniqueTransferEvents[t.txHash] = t
+      const id = `${t.txHash}_${t.from}_${t.to}_${t.value}`
+      if (uniqueTransferEvents[id]) {
+        if (t.data) {
+          if (uniqueTransferEvents[id].data) {
+            transfers.push(t)
+          } else {
+            delete uniqueTransferEvents[id]
+            transfers.push(t)
+          }
         }
       } else {
-        uniqueTransferEvents[t.txHash] = t
+        uniqueTransferEvents[id] = t
       }
     })
-    const transfers = Object.values(uniqueTransferEvents)
+    transfers = transfers.concat(Object.values(uniqueTransferEvents))
     rootLogger.debug(`Processing ${transfers.length} Transfer events (after filter)`)
     const callbacks = transfers.map(transfer =>
       limit(async () => {
