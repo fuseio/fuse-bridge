@@ -19,9 +19,29 @@ const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 let validatorContract = null
 
 function processTransfersBuilder (config) {
-  return async function processTransfers (transfers, deployedBridges) {
+  return async function processTransfers (transferEvents, deployedBridges) {
     const txToSend = []
-    rootLogger.debug(`Processing ${transfers.length} Transfer events`)
+    rootLogger.debug(`Starting to process ${transferEvents.length} Transfer events`)
+
+    const uniqueTransferEvents = {}
+    let transfers = []
+    transferEvents.forEach(t => {
+      const id = `${t.txHash}_${t.from}_${t.to}_${t.value}`
+      if (uniqueTransferEvents[id]) {
+        if (t.data) {
+          if (uniqueTransferEvents[id].data) {
+            transfers.push(t)
+          } else {
+            delete uniqueTransferEvents[id]
+            transfers.push(t)
+          }
+        }
+      } else {
+        uniqueTransferEvents[id] = t
+      }
+    })
+    transfers = transfers.concat(Object.values(uniqueTransferEvents))
+    rootLogger.debug(`Processing ${transfers.length} Transfer events (after filter)`)
     const callbacks = transfers.map(transfer =>
       limit(async () => {
         const { from, value, data, txHash, tokenAddress, to } = transfer
