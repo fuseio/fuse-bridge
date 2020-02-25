@@ -1,4 +1,4 @@
-TAG = 1.0.2
+TAG = 1.0.3
 
 cd WORKING_DIR/fuse-bridge/multiple-erc20-to-erc20/oracle
 
@@ -10,3 +10,4 @@ docker push fusenet/multiple-erc20-to-erc20-oracle:TAG
 
 update TAG in:
   WORKING_DIR/fuse-bridge/multiple-erc20-to-erc20/oracle/docker-compose.yml
+  WORKING_DIR/fuse-bridge/multiple-erc20-to-erc20/oracle/package.json
