@@ -1,8 +1,8 @@
 version: '2.4'
 services:
   rabbit:
-    cpus: 0.3
-    mem_limit: 500m
+    cpus: 0.1
+    mem_limit: 250m
     environment: ['RABBITMQ_NODENAME=node@rabbit']
     hostname: rabbit
     image: rabbitmq:3
@@ -24,7 +24,7 @@ services:
         compress: "true"
   redis:
     cpus: 0.1
-    mem_limit: 500m
+    mem_limit: 250m
     command: [redis-server, --appendonly, 'yes']
     hostname: redis
     image: redis:4
@@ -46,7 +46,7 @@ services:
         compress: "true"
   bridge_request:
     cpus: 0.1
-    mem_limit: 500m
+    mem_limit: 250m
     image: fusenet/multiple-erc20-to-erc20-oracle:1.0.3
     container_name: fuseoracle-signature-request
     env_file: ./.env
@@ -64,7 +64,7 @@ services:
         compress: "true"
   bridge_collected:
     cpus: 0.1
-    mem_limit: 500m
+    mem_limit: 250m
     image: fusenet/multiple-erc20-to-erc20-oracle:1.0.3
     container_name: fuseoracle-collected-signatures
     env_file: ./.env
@@ -82,7 +82,7 @@ services:
         compress: "true"
   bridge_affirmation:
     cpus: 0.1
-    mem_limit: 500m
+    mem_limit: 250m
     image: fusenet/multiple-erc20-to-erc20-oracle:1.0.3
     container_name: fuseoracle-affirmation-request
     env_file: ./.env
@@ -100,7 +100,7 @@ services:
         compress: "true"
   deployed_bridges:
     cpus: 0.1
-    mem_limit: 500m
+    mem_limit: 250m
     image: fusenet/multiple-erc20-to-erc20-oracle:1.0.3
     container_name: fuseoracle-deployed-bridges
     env_file: ./.env
@@ -118,7 +118,7 @@ services:
         compress: "true"
   bridge_senderhome:
     cpus: 0.1
-    mem_limit: 500m
+    mem_limit: 250m
     image: fusenet/multiple-erc20-to-erc20-oracle:1.0.3
     container_name: fuseoracle-sender-home
     env_file: ./.env
@@ -136,7 +136,7 @@ services:
         compress: "true"
   bridge_senderforeign:
     cpus: 0.1
-    mem_limit: 500m
+    mem_limit: 250m
     image: fusenet/multiple-erc20-to-erc20-oracle:1.0.3
     container_name: fuseoracle-sender-foreign
     env_file: ./.env
