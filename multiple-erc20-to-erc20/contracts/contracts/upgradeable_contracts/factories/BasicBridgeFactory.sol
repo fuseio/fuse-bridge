@@ -67,6 +67,14 @@ contract BasicBridgeFactory is EternalStorage, EternalOwnable {
         uintStorage[keccak256(abi.encodePacked("gasPrice"))] = _gasPrice;
     }
 
+    function defaultDecimals() public view returns(uint256) {
+        return uintStorage[keccak256(abi.encodePacked("defaultDecimals"))];
+    }
+
+    function setDefaultDecimals(uint256 _defaultDecimals) public onlyOwner {
+        uintStorage[keccak256(abi.encodePacked("defaultDecimals"))] = _defaultDecimals;
+    }
+
     function homeDailyLimit() public view returns(uint256) {
         return uintStorage[keccak256(abi.encodePacked("homeDailyLimit"))];
     }
@@ -97,5 +105,16 @@ contract BasicBridgeFactory is EternalStorage, EternalOwnable {
 
     function isInitialized() public view returns(bool) {
         return boolStorage[keccak256(abi.encodePacked("isInitialized"))];
+    }
+
+    function adjustToDefaultDecimals(uint256 _amount, uint8 _decimals) public view  returns(uint256) {
+        uint256 defaultDecimalsVal = defaultDecimals();
+        if (defaultDecimalsVal > _decimals) {
+            return _amount / (10 ** (defaultDecimalsVal - _decimals));
+        } else if (defaultDecimalsVal < _decimals) {
+            return _amount * (10 ** (_decimals - defaultDecimalsVal));
+        } else {
+            return _amount;
+        }
     }
 }

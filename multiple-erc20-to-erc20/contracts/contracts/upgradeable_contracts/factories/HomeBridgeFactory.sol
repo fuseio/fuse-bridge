@@ -18,6 +18,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
             address _homeBridgeErcToErcImplementation,
             uint256 _requiredBlockConfirmations,
             uint256 _gasPrice,
+            uint8 _defaultDecimals,
             uint256 _homeDailyLimit,
             uint256 _homeMaxPerTx,
             uint256 _minPerTx,
@@ -35,6 +36,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         require(_homeBridgeErcToErcImplementation != address(0));
         require(_gasPrice > 0);
         require(_requiredBlockConfirmations > 0);
+        require(_defaultDecimals > 0);
         require(_minPerTx > 0 && _homeMaxPerTx > _minPerTx && _homeDailyLimit > _homeMaxPerTx);
         require(_foreignMaxPerTx < _foreignDailyLimit);
         require(_homeBridgeOwner != address(0));
@@ -50,6 +52,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         setHomeBridgeErcToErcImplementation(_homeBridgeErcToErcImplementation);
         setRequiredBlockConfirmations(_requiredBlockConfirmations);
         setGasPrice(_gasPrice);
+        setDefaultDecimals(_defaultDecimals);
         setHomeDailyLimit(_homeDailyLimit);
         setHomeMaxPerTx(_homeMaxPerTx);
         setMinPerTx(_minPerTx);
@@ -89,7 +92,7 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         // cast proxy as IHomeBridge
         IHomeBridge homeBridge = IHomeBridge(proxy);
         // initialize homeBridge
-        homeBridge.initialize(bridgeValidators, homeDailyLimit(), homeMaxPerTx(), minPerTx(), gasPrice(), requiredBlockConfirmations(), token, foreignDailyLimit(), foreignMaxPerTx(), homeBridgeOwner());
+        homeBridge.initialize(bridgeValidators, adjustToDefaultDecimals(homeDailyLimit(), _tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), _tokenDecimals), adjustToDefaultDecimals(minPerTx(), _tokenDecimals), gasPrice(), requiredBlockConfirmations(), token, adjustToDefaultDecimals(foreignDailyLimit(), _tokenDecimals), adjustToDefaultDecimals(foreignMaxPerTx(), _tokenDecimals), homeBridgeOwner());
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(homeBridgeProxyOwner());
         // emit event
