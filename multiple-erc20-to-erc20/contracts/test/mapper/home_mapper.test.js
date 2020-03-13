@@ -16,7 +16,6 @@ const requiredSignatures = 1
 const requiredBlockConfirmations = 8
 const gasPrice = web3.toWei('1', 'gwei')
 const oneEther = web3.toBigNumber(web3.toWei(1, "ether"))
-const defaultDecimals = 18
 const homeDailyLimit = oneEther
 const homeMaxPerTx = halfEther
 const maxPerTx = halfEther
@@ -51,7 +50,7 @@ contract('BridgeMapper', async (accounts) => {
     foreignBridgeFactory = await ForeignBridgeFactory.new()
     homeBridgeFactory = await HomeBridgeFactory.new()
 
-    await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner)
+    await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner)
     await homeBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, homeBridgeContract.address, requiredBlockConfirmations, gasPrice, homeDailyLimit, homeMaxPerTx, minPerTx, foreignDailyLimit, foreignMaxPerTx, owner, owner)
   })
 
