@@ -4,7 +4,7 @@ import "../../upgradeability/EternalStorage.sol";
 import "../EternalOwnable.sol";
 
 contract BasicBridgeFactory is EternalStorage, EternalOwnable {
-    uint8 constant public defaultDecimals = 18;
+    uint256 constant public defaultDecimals = 18;
 
     function getBridgeFactoryVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
         return (3, 0, 0);
@@ -68,14 +68,6 @@ contract BasicBridgeFactory is EternalStorage, EternalOwnable {
         uintStorage[keccak256(abi.encodePacked("gasPrice"))] = _gasPrice;
     }
 
-    // function defaultDecimals() public view returns(uint256) {
-    //     return uintStorage[keccak256(abi.encodePacked("defaultDecimals"))];
-    // }
-
-    function setDefaultDecimals(uint256 _defaultDecimals) public onlyOwner {
-        uintStorage[keccak256(abi.encodePacked("defaultDecimals"))] = _defaultDecimals;
-    }
-
     function homeDailyLimit() public view returns(uint256) {
         return uintStorage[keccak256(abi.encodePacked("homeDailyLimit"))];
     }
@@ -108,7 +100,7 @@ contract BasicBridgeFactory is EternalStorage, EternalOwnable {
         return boolStorage[keccak256(abi.encodePacked("isInitialized"))];
     }
 
-    function adjustToDefaultDecimals(uint256 _amount, uint8 _decimals) public view  returns(uint256) {
+    function adjustToDefaultDecimals(uint256 _amount, uint8 _decimals) public pure  returns(uint256) {
         if (defaultDecimals > _decimals) {
             return _amount / (10 ** (defaultDecimals - _decimals));
         } else if (defaultDecimals < _decimals) {

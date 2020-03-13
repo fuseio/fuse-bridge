@@ -18,7 +18,6 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
             address _foreignBridgeErcToErcImplementation,
             uint256 _requiredBlockConfirmations,
             uint256 _gasPrice,
-            uint8 _defaultDecimals,
             uint256 _foreignMaxPerTx,
             uint256 _homeDailyLimit,
             uint256 _homeMaxPerTx,
@@ -33,7 +32,6 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         require(_foreignBridgeErcToErcImplementation != address(0));
         require(_requiredBlockConfirmations != 0);
         require(_gasPrice > 0);
-        require(_defaultDecimals > 0);
         require(_foreignMaxPerTx >= 0);
         require(_homeMaxPerTx < _homeDailyLimit);
         require(_foreignBridgeOwner != address(0));
@@ -49,7 +47,6 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         setForeignBridgeErcToErcImplementation(_foreignBridgeErcToErcImplementation);
         setRequiredBlockConfirmations(_requiredBlockConfirmations);
         setGasPrice(_gasPrice);
-        setDefaultDecimals(_defaultDecimals);
         setForeignMaxPerTx(_foreignMaxPerTx);
         setHomeDailyLimit(_homeDailyLimit);
         setHomeMaxPerTx(_homeMaxPerTx);
@@ -78,9 +75,9 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         // cast proxy as IForeignBridge
         IForeignBridge foreignBridge = IForeignBridge(proxy);
         // take the token decimals for limits adjustments
-        uint8 decimals = ERC20Detailed(_erc20Token).decimals();
+        uint8 tokenDecimals = ERC20Detailed(_erc20Token).decimals();
         // initialize foreignBridge
-        foreignBridge.initialize(bridgeValidators, _erc20Token, requiredBlockConfirmations(), gasPrice(), adjustToDefaultDecimals(foreignMaxPerTx(), decimals), adjustToDefaultDecimals(homeDailyLimit(), decimals), adjustToDefaultDecimals(homeMaxPerTx(), decimals), foreignBridgeOwner());
+        foreignBridge.initialize(bridgeValidators, _erc20Token, requiredBlockConfirmations(), gasPrice(), adjustToDefaultDecimals(foreignMaxPerTx(), tokenDecimals), adjustToDefaultDecimals(homeDailyLimit(), tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), tokenDecimals), foreignBridgeOwner());
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(foreignBridgeProxyOwner());
         // emit event

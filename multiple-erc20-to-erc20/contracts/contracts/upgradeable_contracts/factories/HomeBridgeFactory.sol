@@ -88,8 +88,11 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         token.transferOwnership(msg.sender);
         // cast proxy as IHomeBridge
         IHomeBridge homeBridge = IHomeBridge(proxy);
+        // adjusting limits for token decimals (declaring these vars here to get around "Stack too deep" error)
+        uint256 foreignDailyLimitVal = adjustToDefaultDecimals(foreignDailyLimit(), _tokenDecimals);
+        uint256 foreignMaxPerTxVal = adjustToDefaultDecimals(foreignMaxPerTx(), _tokenDecimals);
         // initialize homeBridge
-        homeBridge.initialize(bridgeValidators, adjustToDefaultDecimals(homeDailyLimit(), _tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), _tokenDecimals), adjustToDefaultDecimals(minPerTx(), _tokenDecimals), gasPrice(), requiredBlockConfirmations(), token, adjustToDefaultDecimals(foreignDailyLimit(), _tokenDecimals), adjustToDefaultDecimals(foreignMaxPerTx(), _tokenDecimals), homeBridgeOwner());
+        homeBridge.initialize(bridgeValidators, adjustToDefaultDecimals(homeDailyLimit(), _tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), _tokenDecimals), adjustToDefaultDecimals(minPerTx(), _tokenDecimals), gasPrice(), requiredBlockConfirmations(), token, foreignDailyLimitVal, foreignMaxPerTxVal, homeBridgeOwner());
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(homeBridgeProxyOwner());
         // emit event
@@ -124,8 +127,13 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         token.renounceMinter();
         // cast proxy as IHomeBridge
         IHomeBridge homeBridge = IHomeBridge(proxy);
+        // take the token decimals for limits adjustments
+        uint8 tokenDecimals = token.decimals();
+        // adjusting limits for token decimals (declaring these vars here to get around "Stack too deep" error)
+        uint256 foreignDailyLimitVal = adjustToDefaultDecimals(foreignDailyLimit(), tokenDecimals);
+        uint256 foreignMaxPerTxVal = adjustToDefaultDecimals(foreignMaxPerTx(), tokenDecimals);
         // initialize homeBridge
-        homeBridge.initialize(bridgeValidators, homeDailyLimit(), homeMaxPerTx(), minPerTx(), gasPrice(), requiredBlockConfirmations(), token, foreignDailyLimit(), foreignMaxPerTx(), homeBridgeOwner());
+        homeBridge.initialize(bridgeValidators, adjustToDefaultDecimals(homeDailyLimit(), tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), tokenDecimals), adjustToDefaultDecimals(minPerTx(), tokenDecimals), gasPrice(), requiredBlockConfirmations(), token, foreignDailyLimitVal, foreignMaxPerTxVal, homeBridgeOwner());
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(homeBridgeProxyOwner());
         // emit event

@@ -10,7 +10,6 @@ const requiredSignatures = 1
 const requiredBlockConfirmations = 8
 const gasPrice = web3.toWei('1', 'gwei')
 const oneEther = web3.toBigNumber(web3.toWei(1, "ether"))
-const defaultDecimals = 18
 const homeDailyLimit = oneEther
 const homeMaxPerTx = halfEther
 const maxPerTx = halfEther
@@ -35,7 +34,6 @@ contract('ForeignBridgeFactory', async (accounts) => {
       ZERO_ADDRESS.should.be.equal(await foreignBridgeFactory.foreignBridgeErcToErcImplementation())
       '0'.should.be.bignumber.equal(await foreignBridgeFactory.requiredBlockConfirmations())
       '0'.should.be.bignumber.equal(await foreignBridgeFactory.gasPrice())
-      '0'.should.be.bignumber.equal(await foreignBridgeFactory.defaultDecimals())
       '0'.should.be.bignumber.equal(await foreignBridgeFactory.foreignMaxPerTx())
       '0'.should.be.bignumber.equal(await foreignBridgeFactory.homeDailyLimit())
       '0'.should.be.bignumber.equal(await foreignBridgeFactory.homeMaxPerTx())
@@ -43,21 +41,21 @@ contract('ForeignBridgeFactory', async (accounts) => {
       ZERO_ADDRESS.should.be.equal(await foreignBridgeFactory.foreignBridgeProxyOwner())
 
       await foreignBridgeFactory.initialize().should.be.rejectedWith(INVALID_ARGUMENTS)
-      await foreignBridgeFactory.initialize(ZERO_ADDRESS, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, ZERO_ADDRESS, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, 0, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], ZERO_ADDRESS, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, ZERO_ADDRESS, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, 0, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, 0, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, 0, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, 0, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeDailyLimit, owner, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, ZERO_ADDRESS, owner).should.be.rejectedWith(ERROR_MSG)
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, ZERO_ADDRESS).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(ZERO_ADDRESS, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, ZERO_ADDRESS, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, 0, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], ZERO_ADDRESS, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, ZERO_ADDRESS, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, 0, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, 0, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, 0, homeMaxPerTx, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeDailyLimit, owner, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, ZERO_ADDRESS, owner).should.be.rejectedWith(ERROR_MSG)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, ZERO_ADDRESS).should.be.rejectedWith(ERROR_MSG)
 
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner)
+
 
       true.should.be.equal(await foreignBridgeFactory.isInitialized())
       validatorContract.address.should.be.equal(await foreignBridgeFactory.bridgeValidatorsImplementation())
@@ -67,7 +65,6 @@ contract('ForeignBridgeFactory', async (accounts) => {
       foreignBridgeContract.address.should.be.equal(await foreignBridgeFactory.foreignBridgeErcToErcImplementation())
       requiredBlockConfirmations.should.be.bignumber.equal(await foreignBridgeFactory.requiredBlockConfirmations())
       gasPrice.should.be.bignumber.equal(await foreignBridgeFactory.gasPrice())
-      defaultDecimals.should.be.bignumber.equal(await foreignBridgeFactory.defaultDecimals())
       maxPerTx.should.be.bignumber.equal(await foreignBridgeFactory.foreignMaxPerTx())
       homeDailyLimit.should.be.bignumber.equal(await foreignBridgeFactory.homeDailyLimit())
       homeMaxPerTx.should.be.bignumber.equal(await foreignBridgeFactory.homeMaxPerTx())
@@ -84,7 +81,7 @@ contract('ForeignBridgeFactory', async (accounts) => {
     let foreignBridgeFactory
     before(async () => {
       foreignBridgeFactory = await ForeignBridgeFactory.new()
-      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, defaultDecimals, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner)
+      await foreignBridgeFactory.initialize(owner, validatorContract.address, requiredSignatures, [owner], owner, foreignBridgeContract.address, requiredBlockConfirmations, gasPrice, maxPerTx, homeDailyLimit, homeMaxPerTx, owner, owner)
     })
 
     it('should deploy a foreign bridge', async () => {
@@ -149,7 +146,7 @@ contract('ForeignBridgeFactory', async (accounts) => {
       patch.should.be.bignumber.gte(0)
     })
 
-    it('should adjust the limits if token decimals are less then 18', async () => {
+    it('should adjust the limits if token decimals are less than 18', async () => {
       let token = await ERC677BridgeToken.new("Another ERC20_3", "SMT_3", 2)
 
       const {logs} = await foreignBridgeFactory.deployForeignBridge(token.address)
@@ -180,7 +177,7 @@ contract('ForeignBridgeFactory', async (accounts) => {
       patch.should.be.bignumber.gte(0)
     })
 
-    it('should adjust the limits if token decimals are greater then 18', async () => {
+    it('should adjust the limits if token decimals are more than 18', async () => {
       let token = await ERC677BridgeToken.new("Another ERC20_4", "SMT_4", 24)
 
       const {logs} = await foreignBridgeFactory.deployForeignBridge(token.address)
