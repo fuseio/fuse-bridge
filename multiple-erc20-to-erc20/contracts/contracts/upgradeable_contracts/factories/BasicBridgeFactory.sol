@@ -4,6 +4,7 @@ import "../../upgradeability/EternalStorage.sol";
 import "../EternalOwnable.sol";
 
 contract BasicBridgeFactory is EternalStorage, EternalOwnable {
+    uint256 constant public defaultDecimals = 18;
 
     function getBridgeFactoryVersion() public pure returns(uint64 major, uint64 minor, uint64 patch) {
         return (3, 0, 0);
@@ -97,5 +98,15 @@ contract BasicBridgeFactory is EternalStorage, EternalOwnable {
 
     function isInitialized() public view returns(bool) {
         return boolStorage[keccak256(abi.encodePacked("isInitialized"))];
+    }
+
+    function adjustToDefaultDecimals(uint256 _amount, uint8 _decimals) public pure  returns(uint256) {
+        if (defaultDecimals > _decimals) {
+            return _amount / (10 ** (defaultDecimals - _decimals));
+        } else if (defaultDecimals < _decimals) {
+            return _amount * (10 ** (_decimals - defaultDecimals));
+        } else {
+            return _amount;
+        }
     }
 }

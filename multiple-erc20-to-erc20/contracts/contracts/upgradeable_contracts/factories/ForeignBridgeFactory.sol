@@ -4,6 +4,7 @@ import "../../interfaces/IBridgeValidators.sol";
 import "../../interfaces/IForeignBridge.sol";
 import "../../upgradeability/EternalStorageProxy.sol";
 import "./BasicBridgeFactory.sol";
+import "openzeppelin-solidity/contracts/token/ERC20/ERC20Detailed.sol";
 
 contract ForeignBridgeFactory is BasicBridgeFactory {
 
@@ -73,8 +74,10 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         proxy.upgradeTo(1, foreignBridgeErcToErcImplementation());
         // cast proxy as IForeignBridge
         IForeignBridge foreignBridge = IForeignBridge(proxy);
+        // take the token decimals for limits adjustments
+        uint8 tokenDecimals = ERC20Detailed(_erc20Token).decimals();
         // initialize foreignBridge
-        foreignBridge.initialize(bridgeValidators, _erc20Token, requiredBlockConfirmations(), gasPrice(), foreignMaxPerTx(), homeDailyLimit(), homeMaxPerTx(), foreignBridgeOwner());
+        foreignBridge.initialize(bridgeValidators, _erc20Token, requiredBlockConfirmations(), gasPrice(), adjustToDefaultDecimals(foreignMaxPerTx(), tokenDecimals), adjustToDefaultDecimals(homeDailyLimit(), tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), tokenDecimals), foreignBridgeOwner());
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(foreignBridgeProxyOwner());
         // emit event
