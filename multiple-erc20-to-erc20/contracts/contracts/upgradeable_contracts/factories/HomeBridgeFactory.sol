@@ -89,10 +89,13 @@ contract HomeBridgeFactory is BasicBridgeFactory {
         // cast proxy as IHomeBridge
         IHomeBridge homeBridge = IHomeBridge(proxy);
         // adjusting limits for token decimals (declaring these vars here to get around "Stack too deep" error)
+        uint256 homeDailyLimitVal = adjustToDefaultDecimals(homeDailyLimit(), _tokenDecimals);
+        uint256 homeMaxPerTxVal = adjustToDefaultDecimals(homeMaxPerTx(), _tokenDecimals);
+        uint256 homeMinPerTxVal = adjustToDefaultDecimals(minPerTx(), _tokenDecimals);
         uint256 foreignDailyLimitVal = adjustToDefaultDecimals(foreignDailyLimit(), _tokenDecimals);
         uint256 foreignMaxPerTxVal = adjustToDefaultDecimals(foreignMaxPerTx(), _tokenDecimals);
         // initialize homeBridge
-        homeBridge.initialize(bridgeValidators, adjustToDefaultDecimals(homeDailyLimit(), _tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), _tokenDecimals), adjustToDefaultDecimals(minPerTx(), _tokenDecimals), gasPrice(), requiredBlockConfirmations(), token, foreignDailyLimitVal, foreignMaxPerTxVal, homeBridgeOwner());
+        homeBridge.initialize(bridgeValidators, homeDailyLimitVal, homeMaxPerTxVal, homeMinPerTxVal, gasPrice(), requiredBlockConfirmations(), token, foreignDailyLimitVal, foreignMaxPerTxVal, homeBridgeOwner());
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(homeBridgeProxyOwner());
         // emit event
