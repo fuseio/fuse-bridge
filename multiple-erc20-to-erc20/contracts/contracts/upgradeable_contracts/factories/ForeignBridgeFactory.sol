@@ -77,7 +77,10 @@ contract ForeignBridgeFactory is BasicBridgeFactory {
         // take the token decimals for limits adjustments
         uint8 tokenDecimals = ERC20Detailed(_erc20Token).decimals();
         // initialize foreignBridge
-        foreignBridge.initialize(bridgeValidators, _erc20Token, requiredBlockConfirmations(), gasPrice(), adjustToDefaultDecimals(foreignMaxPerTx(), tokenDecimals), adjustToDefaultDecimals(homeDailyLimit(), tokenDecimals), adjustToDefaultDecimals(homeMaxPerTx(), tokenDecimals), foreignBridgeOwner());
+        uint256 foreignMaxPerTxVal = adjustToDefaultDecimals(foreignMaxPerTx(), tokenDecimals);
+        uint256 homeDailyLimitVal = adjustToDefaultDecimals(homeDailyLimit(), tokenDecimals);
+        uint256 homeMaxPerTxVal = adjustToDefaultDecimals(homeMaxPerTx(), tokenDecimals);
+        foreignBridge.initialize(bridgeValidators, _erc20Token, requiredBlockConfirmations(), gasPrice(), foreignMaxPerTxVal, homeDailyLimitVal, homeMaxPerTxVal, foreignBridgeOwner());
         // transfer proxy upgradeability admin
         proxy.transferProxyOwnership(foreignBridgeProxyOwner());
         // emit event
