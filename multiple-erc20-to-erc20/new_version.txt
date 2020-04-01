@@ -1,4 +1,4 @@
-TAG = 1.0.3
+TAG = 1.0.4
 
 cd WORKING_DIR/fuse-bridge/multiple-erc20-to-erc20/oracle
 
