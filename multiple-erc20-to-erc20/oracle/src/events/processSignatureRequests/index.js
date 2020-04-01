@@ -93,8 +93,8 @@ function processSignatureRequestsBuilder (config) {
             logger.info(`signatureRequest ${txHash} was already processed by other validators`)
             return
           } else {
-            logger.error(e, 'Unknown error while processing transaction')
-            throw e
+            logger.error(e, `Unknown error while processing transaction ${txHash}`)
+            return
           }
         }
 

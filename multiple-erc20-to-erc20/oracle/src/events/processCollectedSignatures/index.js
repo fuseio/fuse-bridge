@@ -77,7 +77,7 @@ function processCollectedSignaturesBuilder (config) {
               r,
               s,
               message,
-              NumberOfCollectedSignatures: numberOfCollectedSignatures
+              numberOfCollectedSignatures
             })
             logger.debug({ gasEstimate }, 'Gas estimated')
           } catch (e) {
@@ -90,8 +90,8 @@ function processCollectedSignaturesBuilder (config) {
               logger.error(`The message couldn't be processed; skipping: ${e.message}`)
               return
             } else {
-              logger.error(e, 'Unknown error while processing transaction')
-              throw e
+              logger.error(e, `Unknown error while processing transaction ${txHash}`)
+              return
             }
           }
           const data = await foreignBridge.methods.executeSignatures(v, r, s, message).encodeABI()
