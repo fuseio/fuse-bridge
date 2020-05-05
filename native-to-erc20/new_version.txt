@@ -1,4 +1,4 @@
-TAG = 2.0.2
+TAG = 2.0.3
 
 cd WORKING_DIR/fuse-bridge/native-to-erc20/oracle
 
