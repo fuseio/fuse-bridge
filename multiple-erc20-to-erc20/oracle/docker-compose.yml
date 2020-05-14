@@ -20,7 +20,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
   redis:
     cpus: 0.1
@@ -42,7 +42,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
   bridge_request:
     cpus: 0.1
@@ -60,7 +60,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
   bridge_collected:
     cpus: 0.1
@@ -78,7 +78,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
   bridge_affirmation:
     cpus: 0.1
@@ -96,7 +96,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
   deployed_bridges:
     cpus: 0.1
@@ -114,7 +114,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
   bridge_senderhome:
     cpus: 0.1
@@ -132,7 +132,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
   bridge_senderforeign:
     cpus: 0.1
@@ -150,7 +150,7 @@ services:
       driver: "json-file"
       options:
         max-size: "10m"
-        max-file: "100"
+        max-file: "5"
         compress: "true"
 networks:
   net_db_bridge_request:
