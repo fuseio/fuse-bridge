@@ -28,7 +28,7 @@ services:
     command:
         - 'redis-server'
         - '--loglevel ${REDIS_LOGLEVEL:-notice}'
-        - '--eppendonly yes'
+        - '--appendonly yes'
         - '--maxmemory 50mb'
         - '--maxmemory-policy allkeys-lru'
     hostname: redis
