@@ -1,8 +1,8 @@
 version: '2.4'
 services:
   rabbit:
-    cpus: 0.1
-    mem_limit: 250m
+    cpus: 0.50
+    mem_limit: 1250m
     environment: ['RABBITMQ_NODENAME=node@rabbit']
     hostname: rabbit
     image: rabbitmq:3
@@ -24,11 +24,18 @@ services:
         max-file: "5"
         compress: "true"
   redis:
-    cpus: 0.1
+    cpus: 0.30
     mem_limit: 250m
-    command: [redis-server, --appendonly, 'yes']
+    command:
+        - 'redis-server'
+        - '--loglevel ${REDIS_LOGLEVEL:-notice}'
+        - '--eppendonly yes'
+        - '--maxmemory 50mb'
+        - '--maxmemory-policy allkeys-lru'
     hostname: redis
     image: redis:4
+    sysctls:
+      net.core.somaxconn: 1024
     container_name: fuseoracle-redis
     networks:
       - net_db_bridge_request
@@ -47,7 +54,7 @@ services:
         max-file: "5"
         compress: "true"
   bridge_request:
-    cpus: 0.1
+    cpus: 0.25
     mem_limit: 250m
     image: fusenet/native-to-erc20-oracle:2.0.3
     container_name: fuseoracle-signature-request
@@ -65,7 +72,7 @@ services:
         max-file: "5"
         compress: "true"
   bridge_collected:
-    cpus: 0.1
+    cpus: 0.25
     mem_limit: 250m
     image: fusenet/native-to-erc20-oracle:2.0.3
     container_name: fuseoracle-collected-signatures
@@ -83,7 +90,7 @@ services:
         max-file: "5"
         compress: "true"
   bridge_affirmation:
-    cpus: 0.1
+    cpus: 0.25
     mem_limit: 250m
     image: fusenet/native-to-erc20-oracle:2.0.3
     container_name: fuseoracle-affirmation-request
@@ -101,7 +108,7 @@ services:
         max-file: "5"
         compress: "true"
   bridge_initiate_change:
-    cpus: 0.1
+    cpus: 0.25
     mem_limit: 250m
     image: fusenet/native-to-erc20-oracle:2.0.3
     container_name: fuseoracle-initiate-change
@@ -119,7 +126,7 @@ services:
         max-file: "5"
         compress: "true"
   bridge_rewarded_on_cycle:
-    cpus: 0.1
+    cpus: 0.25
     mem_limit: 250m
     image: fusenet/native-to-erc20-oracle:2.0.3
     container_name: fuseoracle-rewarded-on-cycle
@@ -137,7 +144,7 @@ services:
         max-file: "5"
         compress: "true"
   bridge_senderhome:
-    cpus: 0.1
+    cpus: 0.25
     mem_limit: 250m
     image: fusenet/native-to-erc20-oracle:2.0.3
     container_name: fuseoracle-sender-home
@@ -155,7 +162,7 @@ services:
         max-file: "5"
         compress: "true"
   bridge_senderforeign:
-    cpus: 0.1
+    cpus: 0.25
     mem_limit: 250m
     image: fusenet/native-to-erc20-oracle:2.0.3
     container_name: fuseoracle-sender-foreign
