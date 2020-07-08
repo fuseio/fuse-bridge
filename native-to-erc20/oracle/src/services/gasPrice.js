@@ -10,6 +10,7 @@ const { DEFAULT_UPDATE_INTERVAL } = require('../utils/constants')
 const {
   FOREIGN_DEFAULT_GAS_PRICE,
   FOREIGN_GAS_PRICE_ORACLE_URL,
+  FOREIGN_GAS_PRICE_ORACLE_SECONDARY_URL,
   FOREIGN_GAS_PRICE_SPEED_TYPE,
   FOREIGN_GAS_PRICE_FACTOR,
   FOREIGN_GAS_PRICE_UPDATE_INTERVAL,
@@ -28,13 +29,15 @@ async function fetchGasPriceFromOracle (oracleUrl, speedType, factor) {
   return Web3Utils.toWei(gasPrice.toString(), 'gwei')
 }
 
-async function fetchGasPrice ({ oracleFn }) {
+async function fetchGasPrice ({ oracleFn, secondaryOracleFn }) {
   let gasPrice = null
   try {
     gasPrice = await oracleFn()
     logger.debug({ gasPrice }, 'Gas price updated using the oracle')
   } catch (e) {
-    logger.error(`Gas Price API is not available. ${e.message}`)
+    logger.error(`Primary Gas Price API is not available. ${e.message}`)
+    logger.info('Using the secondary Gas Price API')
+    gasPrice = await secondaryOracleFn()
   }
   return gasPrice
 }
@@ -50,7 +53,8 @@ async function start (chainId) {
     cachedGasPrice = FOREIGN_DEFAULT_GAS_PRICE
     fetchGasPriceInterval = setIntervalAndRun(async () => {
       const gasPrice = await fetchGasPrice({
-        oracleFn: () => fetchGasPriceFromOracle(FOREIGN_GAS_PRICE_ORACLE_URL, FOREIGN_GAS_PRICE_SPEED_TYPE, FOREIGN_GAS_PRICE_FACTOR)
+        oracleFn: () => fetchGasPriceFromOracle(FOREIGN_GAS_PRICE_ORACLE_URL, FOREIGN_GAS_PRICE_SPEED_TYPE, FOREIGN_GAS_PRICE_FACTOR),
+        secondaryOracleFn: () => fetchGasPriceFromOracle(FOREIGN_GAS_PRICE_ORACLE_SECONDARY_URL, FOREIGN_GAS_PRICE_SPEED_TYPE, FOREIGN_GAS_PRICE_FACTOR)
       })
       cachedGasPrice = gasPrice || cachedGasPrice
     }, FOREIGN_GAS_PRICE_UPDATE_INTERVAL || DEFAULT_UPDATE_INTERVAL)
