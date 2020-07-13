@@ -24,9 +24,14 @@ async function estimateGas ({
   expectedMessageLength
 }) {
   try {
+    debugger
     let gasEstimate, methodName
     if (message && message.length !== 2 + 2 * expectedMessageLength) { /* see ../../utils/message.js#createMessage */
       logger.debug('foreignBridge.methods.executeNewSetSignatures')
+      console.log({
+        v, r, s, message
+      })
+      // gasEstimate = 3000000
       gasEstimate = await foreignBridge.methods
         .executeNewSetSignatures(v, r, s, message)
         .estimateGas()
@@ -63,6 +68,7 @@ async function estimateGas ({
     }
 
     // check if all the signatures were made by validators
+    const validators = {}
     for (let i = 0; i < v.length; i++) {
       const address = web3.eth.accounts.recover(message, web3.utils.toHex(v[i]), r[i], s[i])
       logger.debug({ address }, 'Check that signature is from a validator')
@@ -71,6 +77,11 @@ async function estimateGas ({
       if (!isValidator) {
         throw new InvalidValidatorError(`Message signed by ${address} that is not a validator`)
       }
+      if (validators[address]) {
+        logger.error('validator signed twice', { address })
+        throw new Error('Validator signed twice')
+      }
+      validators[address] = true
     }
 
     logger.error(e)

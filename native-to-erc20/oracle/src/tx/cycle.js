@@ -92,7 +92,6 @@ const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter
 
 const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limit, skip }) => {
   const messages = (await getMessages({ fromBlock, toBlock, isNewSetFilter, isRelayedFilter: false })).slice(0, limit)
-  console.log({ messages })
   const homeBridge = new web3Home.eth.Contract(config.eventAbi, config.homeBridgeAddress)
   const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, config.foreignBridgeAddress)
 
@@ -107,6 +106,7 @@ const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limi
 
   for (const message of messages) {
     console.log(`Sending the tx for ${message.txHash} with nonce ${nonce}`)
+    console.log({ message })
     try {
       const job = await createRawTx({ homeBridge, foreignBridge, logger: rootLogger, colSignature: message.event, foreignValidatorContract })
       console.log({ job })
@@ -144,10 +144,10 @@ const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limi
 }
 
 // call example:
-// getMessages({ fromBlock: 5000000, toBlock: 5865568, isRelayedFilter: false, isNewSetFilter: false, })
+getMessages({ fromBlock: 5831273, toBlock: 5967048, isRelayedFilter: false, isNewSetFilter: true })
 
 // call example:
-// relayMessages({ fromBlock: 5823914, toBlock: 5874880, execute: false, isNewSetFilter: true, limit: 1 })
+// relayMessages({ fromBlock: 5831273, toBlock: 5967048, execute: false, isNewSetFilter: true })
 
 module.exports = {
   getMessages,
