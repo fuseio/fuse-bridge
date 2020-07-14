@@ -480,6 +480,28 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
       (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
     })
+
+    it('should allow to update a new set if there are more validator signatures than required signatures', async () => {
+      console.log((await validatorContract.requiredSignatures()).toString())
+
+      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
+      var blockNumber = web3.toBigNumber(217455)
+      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
+      var signature1 = await sign(authorities[0], message);
+      var vrs1 = signatureToVRS(signature1);
+
+      var signature2 = await sign(authorities[1], message);
+      var vrs2 = signatureToVRS(signature2);
+
+      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
+      const {logs} = await foreignBridge.executeNewSetSignatures([vrs1.v, vrs2.v], [vrs1.r, vrs2.r], [vrs1.s, vrs2.s], message).should.be.fulfilled;
+      logs[0].event.should.be.equal("RelayedNewSetMessage");
+      logs[0].args.transactionHash.should.be.equal(transactionHash);
+      logs[0].args.newSet.should.be.deep.equal([accounts[3], accounts[4]]);
+      true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
+      (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
+    })
+
     it('should not allow to update a new set with same transactionHash but different addresses', async () => {
       var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
       // tx 1
