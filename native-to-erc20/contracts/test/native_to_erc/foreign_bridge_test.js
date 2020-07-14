@@ -303,6 +303,46 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       logs[0].args.value.should.be.bignumber.equal(value)
       true.should.be.equal(await foreignBridgeWithThreeSigs.relayedMessages(txHash))
     })
+
+    it('works when number of signatures is greater than the required number', async () => {
+      const recipient = accounts[8]
+      const authoritiesFiveAccs = [accounts[1], accounts[2], accounts[3], accounts[4], accounts[5]]
+      const ownerOfValidators = accounts[0]
+      const validatorContractWith3Signatures = await ForeignBridgeValidators.new()
+      await validatorContractWith3Signatures.initialize(authoritiesFiveAccs, ownerOfValidators)
+      const erc20Token = await POA20.new("Some ERC20", "RSZT", 18);
+      const value = web3.toBigNumber(web3.toWei(0.5, "ether"));
+      const foreignBridgeWithThreeSigs = await ForeignBridge.new()
+
+      await foreignBridgeWithThreeSigs.initialize(validatorContractWith3Signatures.address, erc20Token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted);
+      await erc20Token.addMinter(foreignBridgeWithThreeSigs.address);
+      await erc20Token.renounceMinter();
+
+      const txHash = "0x35d3818e50234655f6aebb2a1cfbf30f59568d8a4ec72066fac5a25dbe7b8121";
+      const message = createMessage(recipient, value, txHash, foreignBridgeWithThreeSigs.address);
+
+      // signature 1
+      const signature = await sign(authoritiesFiveAccs[0], message)
+      const vrs = signatureToVRS(signature);
+
+      // signature 2
+      const signature2 = await sign(authoritiesFiveAccs[1], message)
+      const vrs2 = signatureToVRS(signature2);
+
+      // signature 3
+      const signature3 = await sign(authoritiesFiveAccs[2], message)
+      const vrs3 = signatureToVRS(signature3);
+
+      // signature 4
+      const signature4 = await sign(authoritiesFiveAccs[3], message)
+      const vrs4 = signatureToVRS(signature4);
+
+      const {logs} = await foreignBridgeWithThreeSigs.executeSignatures([vrs.v, vrs2.v, vrs3.v, vrs4.v], [vrs.r, vrs2.r, vrs3.r, vrs4.r], [vrs.s, vrs2.s, vrs3.s, vrs4.s], message).should.be.fulfilled;
+      logs[0].event.should.be.equal("RelayedMessage")
+      logs[0].args.recipient.should.be.equal(recipient)
+      logs[0].args.value.should.be.bignumber.equal(value)
+      true.should.be.equal(await foreignBridgeWithThreeSigs.relayedMessages(txHash))
+    })
   })
 
   describe('#executeSignatures when recipient is foreignBridge itself', function() {
