@@ -176,6 +176,10 @@ library Message {
                 if (!addressArrayContains(encounteredAddresses, recoveredAddress)) {
                     encounteredAddresses[i] = recoveredAddress;
                     signaturesCount++;
+
+                    if (signaturesCount == requiredSignatures) {
+                        return;
+                    }
                 }
             }
         }
@@ -203,6 +207,10 @@ library Message {
                 if (!addressArrayContains(encounteredAddresses, recoveredAddress)) {
                     encounteredAddresses[i] = recoveredAddress;
                     signaturesCount++;
+
+                    if (signaturesCount == requiredSignatures) {
+                        return;
+                    }
                 }
             }
         }
