@@ -40,8 +40,12 @@ function createNewSetMessage ({
   blockNumber,
   bridgeAddress
 }) {
+  console.log('checking print + sending message')
   for (let i = 0; i < newSet.length; i++) {
     const validator = strip0x(newSet[i])
+    if (validator.length !== 20 * 2) {
+      console.log(`length is different: ${validator}`)
+    }
     assert.strictEqual(validator.length, 20 * 2, validator)
     newSet[i] = validator
   }
