@@ -30,20 +30,24 @@ const parseGenericMessage = (unparsedMessage, expectedMessageLength) => {
   }
 }
 
-const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter }) => {
+const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter, event }) => {
   console.log({ fromBlock, toBlock, isRelayedFilter })
   const homeBridge = new web3Home.eth.Contract(config.eventAbi, config.homeBridgeAddress)
 
   const expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
-
+  // console.log(config.eventFilter)
   const events = await getEvents({
     contract: homeBridge,
-    event: config.event,
+    event: event || config.event,
     fromBlock,
     toBlock,
     filter: config.eventFilter
   })
 
+  if (event === 'SignedForUserRequest') {
+    events.forEach(event => console.log(event.returnValues.signer))
+    return
+  }
   let messages = []
   for (const event of events) {
     const { messageHash } = event.returnValues
@@ -108,6 +112,7 @@ const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limi
     console.log(`Sending the tx for ${message.txHash} with nonce ${nonce}`)
     console.log({ message })
     try {
+      debugger
       const job = await createRawTx({ homeBridge, foreignBridge, logger: rootLogger, colSignature: message.event, foreignValidatorContract })
       console.log({ job })
 
@@ -144,10 +149,10 @@ const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limi
 }
 
 // call example:
-getMessages({ fromBlock: 5831273, toBlock: 5967048, isRelayedFilter: false, isNewSetFilter: true })
+getMessages({ fromBlock: 5831273, toBlock: 5831287, isRelayedFilter: false, isNewSetFilter: false, event: 'SignedForUserRequest' })
 
 // call example:
-// relayMessages({ fromBlock: 5831273, toBlock: 5967048, execute: false, isNewSetFilter: true })
+// relayMessages({ fromBlock: 5999394, toBlock: 6000000, execute: false, isNewSetFilter: false })
 
 module.exports = {
   getMessages,
