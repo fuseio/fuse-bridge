@@ -15,6 +15,8 @@ const {
 } = require('../../utils/errors')
 const { MAX_CONCURRENT_EVENTS, MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY } = require('../../utils/constants')
 
+const { ALWAYS_RELAY_COLLECTED_SIGNATURES } = process.env
+
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
 let homeValidatorContract = null
@@ -56,7 +58,8 @@ function processCollectedSignaturesBuilder (config) {
         })
 
         let runProcess = true
-        if (authorityResponsibleForRelay !== web3Home.utils.toChecksumAddress(config.validatorAddress)) {
+        if (!ALWAYS_RELAY_COLLECTED_SIGNATURES &&
+            authorityResponsibleForRelay !== web3Home.utils.toChecksumAddress(config.validatorAddress)) {
           const currentBlockNumber = await getBlockNumber(web3Home)
           if (currentBlockNumber > blockNumber + MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY) {
             const validators = await homeValidatorContract.methods.getValidators().call()
