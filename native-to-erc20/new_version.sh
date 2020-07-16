@@ -1,4 +1,4 @@
-export TAG=assert
+export TAG=2.0.4
 
 docker build -t fusenet/native-to-erc20-oracle .
 

@@ -56,7 +56,7 @@ services:
   bridge_request:
     cpus: 0.25
     mem_limit: 250m
-    image: fusenet/native-to-erc20-oracle:assert
+    image: fusenet/native-to-erc20-oracle:2.0.4
     container_name: fuseoracle-signature-request
     env_file: ./.env
     environment:
@@ -74,7 +74,7 @@ services:
   bridge_collected:
     cpus: 0.25
     mem_limit: 250m
-    image: fusenet/native-to-erc20-oracle:assert
+    image: fusenet/native-to-erc20-oracle:2.0.4
     container_name: fuseoracle-collected-signatures
     env_file: ./.env
     environment:
@@ -92,7 +92,7 @@ services:
   bridge_affirmation:
     cpus: 0.25
     mem_limit: 250m
-    image: fusenet/native-to-erc20-oracle:assert
+    image: fusenet/native-to-erc20-oracle:2.0.4
     container_name: fuseoracle-affirmation-request
     env_file: ./.env
     environment:
@@ -110,7 +110,7 @@ services:
   bridge_initiate_change:
     cpus: 0.25
     mem_limit: 250m
-    image: fusenet/native-to-erc20-oracle:assert
+    image: fusenet/native-to-erc20-oracle:2.0.4
     container_name: fuseoracle-initiate-change
     env_file: ./.env
     environment:
@@ -128,7 +128,7 @@ services:
   bridge_rewarded_on_cycle:
     cpus: 0.25
     mem_limit: 250m
-    image: fusenet/native-to-erc20-oracle:assert
+    image: fusenet/native-to-erc20-oracle:2.0.4
     container_name: fuseoracle-rewarded-on-cycle
     env_file: ./.env
     environment:
@@ -146,7 +146,7 @@ services:
   bridge_senderhome:
     cpus: 0.25
     mem_limit: 250m
-    image: fusenet/native-to-erc20-oracle:assert
+    image: fusenet/native-to-erc20-oracle:2.0.4
     container_name: fuseoracle-sender-home
     env_file: ./.env
     environment:
@@ -164,7 +164,7 @@ services:
   bridge_senderforeign:
     cpus: 0.25
     mem_limit: 250m
-    image: fusenet/native-to-erc20-oracle:assert
+    image: fusenet/native-to-erc20-oracle:2.0.4
     container_name: fuseoracle-sender-foreign
     env_file: ./.env
     environment:
