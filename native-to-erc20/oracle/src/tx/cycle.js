@@ -1,5 +1,4 @@
 const { getEvents } = require('./web3')
-const config = require('../../config/collected-signatures-watcher.config')
 const { web3Home, web3Foreign } = require('../services/web3')
 const { sendTx } = require('./sendTx')
 const { parseMessage, parseNewSetMessage } = require('../utils/message')
@@ -12,6 +11,7 @@ const {
 } = require('../utils/utils')
 const { EXTRA_GAS_PERCENTAGE } = require('../utils/constants')
 
+const processInitiateChangeBuilder = require('../events/processInitiateChange')
 const foreignBridgeValidatorsABI = require('../../abis/ForeignBridgeValidators.abi')
 const rootLogger = require('../services/logger')
 
@@ -31,6 +31,8 @@ const parseGenericMessage = (unparsedMessage, expectedMessageLength) => {
 }
 
 const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter, event }) => {
+  const config = require('../../config/collected-signatures-watcher.config')
+
   console.log({ fromBlock, toBlock, isRelayedFilter })
   const homeBridge = new web3Home.eth.Contract(config.eventAbi, config.homeBridgeAddress)
 
@@ -44,10 +46,11 @@ const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter
     filter: config.eventFilter
   })
 
-  if (event === 'SignedForUserRequest') {
-    events.forEach(event => console.log(event.returnValues.signer))
-    return
+  if (event === 'SignedForUserRequest' || event === 'InitiateChange') {
+    // events.forEach(event => console.log(event.returnValues.signer))
+    return events
   }
+
   let messages = []
   for (const event of events) {
     const { messageHash } = event.returnValues
@@ -95,6 +98,8 @@ const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter
 }
 
 const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limit, skip }) => {
+  const config = require('../../config/collected-signatures-watcher.config')
+
   const messages = (await getMessages({ fromBlock, toBlock, isNewSetFilter, isRelayedFilter: false })).slice(0, limit)
   const homeBridge = new web3Home.eth.Contract(config.eventAbi, config.homeBridgeAddress)
   const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, config.foreignBridgeAddress)
@@ -148,11 +153,36 @@ const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limi
   }
 }
 
+const sendInitiateChange = async ({ fromBlock, toBlock }) => {
+  const config = require('../../config/initiate-change-watcher.config')
+  const eventContract = new web3Home.eth.Contract(config.eventAbi, '0x3014ca10b91cb3D0AD85fEf7A3Cb95BCAc9c0f79')
+  debugger
+  const events = await getEvents({
+    contract: eventContract,
+    event: config.event,
+    fromBlock,
+    toBlock,
+    filter: config.eventFilter
+  })
+  // const events = await getMessages({ fromBlock, toBlock, event: 'InitiateChange' })
+  console.log({ events })
+
+  const processInitiateChange = processInitiateChangeBuilder(config)
+
+  await processInitiateChange(
+    [events[0]],
+    config.homeBridgeAddress,
+    config.foreignBridgeAddress
+  )
+}
+
 // call example:
-getMessages({ fromBlock: 5831273, toBlock: 5831287, isRelayedFilter: false, isNewSetFilter: false, event: 'SignedForUserRequest' })
+// getMessages({ fromBlock: 5831273, toBlock: 5831287, isRelayedFilter: false, isNewSetFilter: false, event: 'SignedForUserRequest' })
 
 // call example:
 // relayMessages({ fromBlock: 5999394, toBlock: 6000000, execute: false, isNewSetFilter: false })
+
+sendInitiateChange({ fromBlock: 5831273, toBlock: 6000000, execute: false })
 
 module.exports = {
   getMessages,
