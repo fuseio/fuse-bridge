@@ -1,6 +1,7 @@
-$TAG = 2.0.4
+export TAG=assert
 
-cd WORKING_DIR/fuse-bridge/native-to-erc20/oracle
+# cd WORKING_DIR/fuse-bridge/native-to-erc20/oracle
+cd oracle
 
 docker build -t fusenet/testnet-native-to-erc20-oracle .
 
