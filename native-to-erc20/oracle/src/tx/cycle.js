@@ -47,7 +47,7 @@ const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter
   })
 
   if (event === 'SignedForUserRequest' || event === 'InitiateChange') {
-    // events.forEach(event => console.log(event.returnValues.signer))
+    events.forEach(event => console.log(event.returnValues.signer))
     return events
   }
 
@@ -177,14 +177,15 @@ const sendInitiateChange = async ({ fromBlock, toBlock }) => {
 }
 
 // call example:
-// getMessages({ fromBlock: 5831273, toBlock: 5831287, isRelayedFilter: false, isNewSetFilter: false, event: 'SignedForUserRequest' })
+getMessages({ fromBlock: 6000000, toBlock: 6022014, isRelayedFilter: false, isNewSetFilter: false, event: 'SignedForUserRequest' })
 
 // call example:
 // relayMessages({ fromBlock: 5999394, toBlock: 6000000, execute: false, isNewSetFilter: false })
 
-sendInitiateChange({ fromBlock: 5831273, toBlock: 6000000, execute: false })
+// sendInitiateChange({ fromBlock: 5831273, toBlock: 6000000, execute: false })
 
 module.exports = {
   getMessages,
-  relayMessages
+  relayMessages,
+  sendInitiateChange
 }
