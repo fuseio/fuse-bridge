@@ -14,22 +14,22 @@ function createMessage ({
   expectedMessageLength
 }) {
   recipient = strip0x(recipient)
-  assert.strictEqual(recipient.length, 20 * 2)
+  assert.strictEqual(recipient.length, 20 * 2, recipient)
 
   value = Web3Utils.numberToHex(value)
   value = Web3Utils.padLeft(value, 32 * 2)
 
   value = strip0x(value)
-  assert.strictEqual(value.length, 64)
+  assert.strictEqual(value.length, 64, value)
 
   transactionHash = strip0x(transactionHash)
-  assert.strictEqual(transactionHash.length, 32 * 2)
+  assert.strictEqual(transactionHash.length, 32 * 2, transactionHash)
 
   bridgeAddress = strip0x(bridgeAddress)
-  assert.strictEqual(bridgeAddress.length, 20 * 2)
+  assert.strictEqual(bridgeAddress.length, 20 * 2, bridgeAddress)
 
   const message = `0x${recipient}${value}${transactionHash}${bridgeAddress}`
-  assert.strictEqual(message.length, 2 + 2 * expectedMessageLength)
+  assert.strictEqual(message.length, 2 + 2 * expectedMessageLength, message)
   return message
 }
 
@@ -46,17 +46,17 @@ function createNewSetMessage ({
   }
 
   transactionHash = strip0x(transactionHash)
-  assert.strictEqual(transactionHash.length, 32 * 2)
+  assert.strictEqual(transactionHash.length, 32 * 2, transactionHash)
 
   bridgeAddress = strip0x(bridgeAddress)
-  assert.strictEqual(bridgeAddress.length, 20 * 2)
+  assert.strictEqual(bridgeAddress.length, 20 * 2, bridgeAddress)
 
   if (foreignBridgeVersion > 1) {
     blockNumber = Web3Utils.numberToHex(blockNumber)
     blockNumber = Web3Utils.padLeft(blockNumber, 32 * 2)
 
     blockNumber = strip0x(blockNumber)
-    assert.strictEqual(blockNumber.length, 32 * 2)
+    assert.strictEqual(blockNumber.length, 32 * 2, blockNumber)
 
     return `0x${transactionHash}${blockNumber}${bridgeAddress}${newSet.join('')}`
   }
@@ -129,7 +129,7 @@ function parseNewSetMessage (message) {
 }
 
 function signatureToVRS (signature) {
-  assert.strictEqual(signature.length, 2 + 32 * 2 + 32 * 2 + 2)
+  assert.strictEqual(signature.length, 2 + 32 * 2 + 32 * 2 + 2, signature)
   signature = strip0x(signature)
   const v = parseInt(signature.substr(64 * 2), 16)
   const r = `0x${signature.substr(0, 32 * 2)}`

@@ -72,7 +72,7 @@ function processInitiateChangeBuilder (config) {
         const foreignBridgeVersion = await foreignBridgeStorage.methods.version().call()
         const message = createNewSetMessage({
           foreignBridgeVersion,
-          newSet: newSet,
+          newSet: [...newSet],
           transactionHash: initiateChange.transactionHash,
           blockNumber,
           bridgeAddress: foreignBridgeAddress
