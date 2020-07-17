@@ -23,46 +23,19 @@ const createRawTx = async ({ homeBridge, foreignBridge, logger, colSignature, fo
 
   const [v, r, s] = [[], [], []]
   logger.debug('Getting message signatures')
-  // const signaturePromises = requiredSignatures.map(async (el, index) => {
-  //   logger.debug({ index }, 'Getting message signature')
-  //   const signature = await homeBridge.methods.signature(messageHash, index).call()
-  //   const recover = signatureToVRS(signature)
-  //   const address = web3.eth.accounts.recover(message, web3.utils.toHex(recover.v), recover.r, recover.s)
-
-  //   logger.debug({ address }, 'Check that signature is from a validator')
-  //   const isValidator = await validatorContract.methods.isValidator(address).call()
-
-  //   if (isValidator) {
-  //     v.push(recover.v)
-  //     r.push(recover.r)
-  //     s.push(recover.s)
-  //     // throw new InvalidValidatorError(`Message signed by ${address} that is not a validator`)
-  //   }
-  // })
-  let index = 0
-  debugger
-  console.log({ NumberOfCollectedSignatures })
-  while (v.length < NumberOfCollectedSignatures) {
+  const signaturePromises = requiredSignatures.map(async (el, index) => {
     logger.debug({ index }, 'Getting message signature')
     const signature = await homeBridge.methods.signature(messageHash, index).call()
     const recover = signatureToVRS(signature)
-    const address = web3.eth.accounts.recover(message, web3.utils.toHex(recover.v), recover.r, recover.s)
+    v.push(recover.v)
+    r.push(recover.r)
+    s.push(recover.s)
+  })
+  // let index = 0
+  // debugger
+  // console.log({ NumberOfCollectedSignatures })
 
-    logger.debug({ address }, 'Check that signature is from a validator')
-    const isValidator = await foreignValidatorContract.methods.isValidator(address).call()
-
-    if (isValidator) {
-      v.push(recover.v)
-      r.push(recover.r)
-      s.push(recover.s)
-    } else {
-      logger.debug({ address }, 'Is not validator')
-    }
-    console.log(v.length)
-    index++
-  }
-
-  // await Promise.all(signaturePromises)
+  await Promise.all(signaturePromises)
 
   let gasEstimate, methodName
   try {

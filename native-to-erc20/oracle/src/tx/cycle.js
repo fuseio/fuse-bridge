@@ -32,6 +32,7 @@ const parseGenericMessage = (unparsedMessage, expectedMessageLength) => {
 
 const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter, event }) => {
   const config = require('../../config/collected-signatures-watcher.config')
+  toBlock = toBlock || await web3Home.eth.getBlockNumber()
 
   console.log({ fromBlock, toBlock, isRelayedFilter })
   const homeBridge = new web3Home.eth.Contract(config.eventAbi, config.homeBridgeAddress)
@@ -46,8 +47,10 @@ const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter
     filter: config.eventFilter
   })
 
+  console.log({ events })
+
   if (event === 'SignedForUserRequest' || event === 'InitiateChange') {
-    events.forEach(event => console.log(event.returnValues.signer))
+    events.forEach(event => console.log(event.returnValues))
     return events
   }
 
@@ -153,7 +156,10 @@ const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limi
   }
 }
 
-const sendInitiateChange = async ({ fromBlock, toBlock }) => {
+const sendInitiateChange = async ({ fromBlock, toBlock, execute }) => {
+  toBlock = toBlock || await web3Home.eth.getBlockNumber()
+  console.log({ fromBlock, toBlock })
+
   const config = require('../../config/initiate-change-watcher.config')
   const eventContract = new web3Home.eth.Contract(config.eventAbi, '0x3014ca10b91cb3D0AD85fEf7A3Cb95BCAc9c0f79')
   debugger
@@ -165,22 +171,25 @@ const sendInitiateChange = async ({ fromBlock, toBlock }) => {
     filter: config.eventFilter
   })
   // const events = await getMessages({ fromBlock, toBlock, event: 'InitiateChange' })
-  console.log({ events })
+  // console.log({ events })
+  console.log(events.length)
 
-  const processInitiateChange = processInitiateChangeBuilder(config)
+  if (execute) {
+    const processInitiateChange = processInitiateChangeBuilder(config)
 
-  await processInitiateChange(
-    [events[0]],
-    config.homeBridgeAddress,
-    config.foreignBridgeAddress
-  )
+    await processInitiateChange(
+      [events[0]],
+      config.homeBridgeAddress,
+      config.foreignBridgeAddress
+    )
+  }
 }
 
 // call example:
-getMessages({ fromBlock: 6000000, toBlock: 6022014, isRelayedFilter: false, isNewSetFilter: false, event: 'SignedForUserRequest' })
+getMessages({ fromBlock: 5999398, isRelayedFilter: false, isNewSetFilter: true })
 
 // call example:
-// relayMessages({ fromBlock: 5999394, toBlock: 6000000, execute: false, isNewSetFilter: false })
+// relayMessages({ fromBlock: 5999398, toBlock: 5999399, isRelayedFilter: false, isNewSetFilter: false, execute: true })
 
 // sendInitiateChange({ fromBlock: 5831273, toBlock: 6000000, execute: false })
 
