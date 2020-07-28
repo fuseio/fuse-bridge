@@ -1,10 +1,13 @@
 const ForeignBridgeValidators = artifacts.require("ForeignBridgeValidators.sol");
+const ForeignBridgeValidatorsMock = artifacts.require("ForeignBridgeValidatorsMock.sol");
 const EternalStorageProxy = artifacts.require("EternalStorageProxy.sol");
 const {ERROR_MSG, ERROR_MSG_OPCODE, ZERO_ADDRESS} = require('../setup');
+const ethUtils = require('ethereumjs-util');
 
 contract('ForeignBridgeValidators', async (accounts) => {
   let token
   let owner = accounts[0]
+  let foreignBridgeValidators
   const user = accounts[1];
   beforeEach(async () => {
     foreignBridgeValidators = await ForeignBridgeValidators.new();
@@ -76,6 +79,24 @@ contract('ForeignBridgeValidators', async (accounts) => {
       true.should.be.equal(await finalContract.isValidator(validators[1]))
       owner.should.be.equal(await finalContract.owner())
       validators.length.should.be.bignumber.equal(await finalContract.validatorCount())
+    })
+  })
+
+  describe('#stress tests', () => {
+    beforeEach(async () => {
+      foreignBridgeValidators = await ForeignBridgeValidatorsMock.new();
+
+      const numberOfValidators = 100
+      const validators = []
+      for (let i = 0; i < numberOfValidators; i++) {
+        const validator = ethUtils.bufferToHex(ethUtils.generateAddress(accounts[0], i))
+        validators.push(validator)
+      }
+      await foreignBridgeValidators.initialize(validators, accounts[2], {from: accounts[2]}).should.be.fulfilled;
+    })
+
+    it('check gas for isValidator', async () => {
+      await foreignBridgeValidators.isValidatorExecute(accounts[1])
     })
   })
 })

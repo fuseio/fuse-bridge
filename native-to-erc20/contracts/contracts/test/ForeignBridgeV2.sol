@@ -1,6 +1,6 @@
 pragma solidity 0.4.24;
 
-import "../../contracts/upgradeable_contracts/native_to_erc20/ForeignBridgeNativeToErc.sol";
+import "../upgradeable_contracts/native_to_erc20/ForeignBridgeNativeToErc.sol";
 
 contract ForeignBridgeV2 is ForeignBridgeNativeToErc {
     // used for testing

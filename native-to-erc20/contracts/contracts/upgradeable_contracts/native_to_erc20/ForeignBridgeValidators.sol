@@ -53,7 +53,8 @@ contract ForeignBridgeValidators is IForeignBridgeValidators, EternalStorage, Et
   }
 
   function isValidator(address _address) public view returns(bool) {
-    for (uint256 i; i < validatorCount(); i++) {
+    uint256 _validatorCount = validatorCount();
+    for (uint256 i; i < _validatorCount; i++) {
       if (_address == addressArrayStorage[VALIDATORS][i]) {
         return true;
       }
