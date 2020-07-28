@@ -14,7 +14,7 @@ contract ForeignBridgeValidatorsMock is ForeignBridgeValidators {
     setOwner(_owner);
   }
 
-  function isValidatorCall(address _address) public {
+  function isValidatorExecute(address _address) public {
     isValidator(_address);
   }
 }

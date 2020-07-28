@@ -86,7 +86,7 @@ contract('ForeignBridgeValidators', async (accounts) => {
     beforeEach(async () => {
       foreignBridgeValidators = await ForeignBridgeValidatorsMock.new();
 
-      const numberOfValidators = 100
+      const numberOfValidators = 60
       const validators = []
       for (let i = 0; i < numberOfValidators; i++) {
         const validator = ethUtils.bufferToHex(ethUtils.generateAddress(accounts[0], i))
@@ -95,9 +95,8 @@ contract('ForeignBridgeValidators', async (accounts) => {
       await foreignBridgeValidators.initialize(validators, accounts[2], {from: accounts[2]}).should.be.fulfilled;
     })
 
-    it('check is validator', async () => {
-      await foreignBridgeValidators.isValidatorCall(accounts[1])
-      // await foreignBridgeValidators.removeValidator(accounts[1], {from: accounts[2]}).should.be.rejectedWith(ERROR_MSG)
+    it('check gas for isValidator', async () => {
+      await foreignBridgeValidators.isValidatorExecute(accounts[1])
     })
 
     // console.log(accounts.length)
