@@ -186,10 +186,10 @@ const sendInitiateChange = async ({ fromBlock, toBlock, execute }) => {
 }
 
 // call example:
-getMessages({ fromBlock: 5999398, isRelayedFilter: false, isNewSetFilter: true })
+// getMessages({ fromBlock: 5969512, isRelayedFilter: false, isNewSetFilter: true })
 
 // call example:
-// relayMessages({ fromBlock: 5999398, toBlock: 5999399, isRelayedFilter: false, isNewSetFilter: false, execute: true })
+relayMessages({ fromBlock: 6211433, toBlock: 6224313, isRelayedFilter: false, isNewSetFilter: true, execute: true })
 
 // sendInitiateChange({ fromBlock: 5831273, toBlock: 6000000, execute: false })
 
