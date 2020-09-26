@@ -30,6 +30,16 @@ const parseGenericMessage = (unparsedMessage, expectedMessageLength) => {
   }
 }
 
+/**
+ * Fetch the messages from Fuse network that intended to be relayed to Ethereum.
+ * The messages can represent updates to the validators set, minting on EoC, or bridge transfers
+ * @param {number} fromBlock - from blocknumber to look for messages
+ * @param {number} toBlock - to blocknumber block to look messages
+ * @param {bool} isRelayedFilter - if false will filter already relayed messages
+ * @param {bool} isNewSetFilter - if true will filter only new validator set updates
+ * @param {string} event - if specifed fetch other events like SignedForUserRequest or InitiateChange
+ */
+
 const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter, event }) => {
   const config = require('../../config/collected-signatures-watcher.config')
   toBlock = toBlock || await web3Home.eth.getBlockNumber()
@@ -100,7 +110,16 @@ const getMessages = async ({ fromBlock, toBlock, isRelayedFilter, isNewSetFilter
   return filteredMessages
 }
 
-const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limit, skip }) => {
+/**
+ * Relay the messages from Fuse network to Ethereum.
+ * The messages can represent updates to the validators set, minting on EoC, or bridge transfers
+ * @param {number} fromBlock - from blocknumber to look for messages
+ * @param {number} toBlock - to blocknumber block to look messages
+ * @param {bool} execute - on true will try to to send tx on Ethereum, otherwise acts like a dry run
+ * @param {bool} isNewSetFilter - if true will filter only new validator set updates
+ * @param {number} limit - limit number of relayed messages. It's advice to set to 1 when executing.
+ */
+const relayMessages = async ({ fromBlock, toBlock, execute, isNewSetFilter, limit }) => {
   const config = require('../../config/collected-signatures-watcher.config')
 
   const messages = (await getMessages({ fromBlock, toBlock, isNewSetFilter, isRelayedFilter: false })).slice(0, limit)
@@ -189,7 +208,7 @@ const sendInitiateChange = async ({ fromBlock, toBlock, execute }) => {
 // getMessages({ fromBlock: 5969512, isRelayedFilter: false, isNewSetFilter: true })
 
 // call example:
-relayMessages({ fromBlock: 6211433, toBlock: 6224313, isRelayedFilter: false, isNewSetFilter: true, execute: true })
+relayMessages({ fromBlock: 5969512, toBlock: 7213700, isRelayedFilter: false, isNewSetFilter: false, execute: false })
 
 // sendInitiateChange({ fromBlock: 5831273, toBlock: 6000000, execute: false })
 
