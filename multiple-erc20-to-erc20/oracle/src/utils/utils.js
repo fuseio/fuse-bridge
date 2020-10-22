@@ -46,7 +46,9 @@ async function waitForFunds (web3, address, minimumBalance, cb, logger) {
     },
     {
       forever: true,
-      factor: 1
+      factor: 1,
+      minTimeout: 60 * 1000,
+      maxTimeout: 30 * 60 * 1000
     }
   )
 }
