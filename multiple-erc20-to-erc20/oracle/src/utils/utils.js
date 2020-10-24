@@ -45,10 +45,11 @@ async function waitForFunds (web3, address, minimumBalance, cb, logger) {
       }
     },
     {
+      // scale the retry time depending on amount of failed attempts Math.min(random * minTimeout * Math.pow(factor, attempt), maxTimeout)
       forever: true,
-      factor: 1,
-      minTimeout: 60 * 1000,
-      maxTimeout: 30 * 60 * 1000
+      factor: 1.5,
+      minTimeout: 60 * 1000, //min time = 1min
+      maxTimeout: 30 * 60 * 1000 //max time = 30min
     }
   )
 }
