@@ -49,7 +49,7 @@ async function waitForFunds (web3, address, minimumBalance, cb, logger) {
       forever: true,
       factor: 1.5,
       minTimeout: 60 * 1000, //min time = 1min
-      maxTimeout: 30 * 60 * 1000 //max time = 30min
+      maxTimeout: 10 * 60 * 1000 //max time = 10min
     }
   )
 }
