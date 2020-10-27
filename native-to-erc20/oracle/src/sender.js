@@ -141,12 +141,15 @@ async function main ({ msg, ackMsg, nackMsg, sendToQueue, channel }) {
           `Tx Failed for event Tx ${job.transactionReference}.`,
           e.message
         )
-        if (!e.message.includes('Transaction with the same hash was already imported')) {
+
+        var lowerCaseErrorString = e.message.toLowerCase()
+
+        if (!lowerCaseErrorString.includes('transaction with the same hash was already imported')) {
           logger.debug(`adding event Tx ${job.transactionReference} to failedTx`)
           failedTx.push(job)
         }
 
-        if (e.message.includes('Insufficient funds')) {
+        if (lowerCaseErrorString.includes('insufficient funds')) {
           insufficientFunds = true
           const currentBalance = await web3Instance.eth.getBalance(VALIDATOR_ADDRESS)
           minimumBalance = gasLimit.multipliedBy(gasPrice)
@@ -154,9 +157,9 @@ async function main ({ msg, ackMsg, nackMsg, sendToQueue, channel }) {
             `Insufficient funds: ${currentBalance}. Stop processing messages until the balance is at least ${minimumBalance}.`
           )
         } else if (
-          e.message.includes('Transaction nonce is too low') ||
-          e.message.includes('transaction with same nonce in the queue') ||
-          e.message.includes('nonce too low')
+          lowerCaseErrorString.includes('transaction nonce is too low') ||
+          lowerCaseErrorString.includes('transaction with same nonce in the queue') ||
+          lowerCaseErrorString.includes('nonce too low')
         ) {
           logger.debug('read nonce with forceUpdate=true')
           nonce = await readNonce(true)
@@ -183,7 +186,7 @@ async function main ({ msg, ackMsg, nackMsg, sendToQueue, channel }) {
         'Insufficient funds. Stop sending transactions until the account has the minimum balance'
       )
       channel.close()
-      waitForFunds(web3Instance, VALIDATOR_ADDRESS, minimumBalance, resume, logger)
+      waitForFunds(web3Instance, VALIDATOR_ADDRESS, web3Instance.utils.toBN(minimumBalance), resume, logger)
     }
   } catch (e) {
     logger.error(e)

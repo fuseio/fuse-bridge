@@ -37,7 +37,7 @@ async function waitForFunds (web3, address, minimumBalance, cb, logger) {
         )
         cb(newBalance)
       } else {
-        logger.debug(
+        logger.warn(
           { balance: newBalance, minimumBalance },
           'Balance of validator is still less than the minimum'
         )
@@ -45,8 +45,11 @@ async function waitForFunds (web3, address, minimumBalance, cb, logger) {
       }
     },
     {
+      // scale the retry time depending on amount of failed attempts Math.min(random * minTimeout * Math.pow(factor, attempt), maxTimeout)
       forever: true,
-      factor: 1
+      factor: 1.5,
+      minTimeout: 60 * 1000, //min time = 1min
+      maxTimeout: 10 * 60 * 1000 //max time = 10min
     }
   )
 }
