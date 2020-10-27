@@ -141,7 +141,7 @@ async function main ({ msg, ackMsg, nackMsg, sendToQueue, channel }) {
           `Tx Failed for event Tx ${job.transactionReference}.`,
           e.message
         )
-
+        
         var lowerCaseErrorString = e.message.toLowerCase()
 
         if (!lowerCaseErrorString.includes('transaction with the same hash was already imported')) {
@@ -186,7 +186,7 @@ async function main ({ msg, ackMsg, nackMsg, sendToQueue, channel }) {
         'Insufficient funds. Stop sending transactions until the account has the minimum balance'
       )
       channel.close()
-      waitForFunds(web3Instance, VALIDATOR_ADDRESS, minimumBalance, resume, logger)
+      waitForFunds(web3Instance, VALIDATOR_ADDRESS, web3Instance.utils.toBN(minimumBalance), resume, logger)
     }
   } catch (e) {
     logger.error(e)

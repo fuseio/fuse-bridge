@@ -30,7 +30,7 @@ async function waitForFunds (web3, address, minimumBalance, cb, logger) {
     async retry => {
       logger.debug('Getting balance of validator account')
       const newBalance = web3.utils.toBN(await web3.eth.getBalance(address))
-      if (newBalance >= minimumBalance) {
+      if (newBalance.gte(minimumBalance)) {
         logger.debug(
           { balance: newBalance, minimumBalance },
           'Validator has minimum necessary balance'
