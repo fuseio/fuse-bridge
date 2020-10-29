@@ -1,6 +1,6 @@
 {
   "name": "native-to-erc20-bridge-oracle",
-  "version": "2.0.4",
+  "version": "2.0.6",
   "description": "",
   "scripts": {
     "watcher:signature-request": "./scripts/start-worker.sh watcher signature-request-watcher",
