@@ -80,8 +80,4 @@ contract HomeBridgeErcToErc is ERC677Receiver, EternalStorage, BasicBridge, Basi
         setTxAboveLimits(_recipient, _value, _txHash);
         emit AmountLimitExceeded(_recipient, _value, _txHash);
     }
-
-    function renounceMinter() public onlyIfOwnerOfProxy {
-        erc677token().renounceMinter();
-    }
 }

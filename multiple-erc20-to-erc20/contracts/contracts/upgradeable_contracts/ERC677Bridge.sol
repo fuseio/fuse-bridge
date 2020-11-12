@@ -27,4 +27,8 @@ contract ERC677Bridge is BasicBridge {
     function fireEventOnTokenTransfer(address /*_from */, uint256 /* _value */, bytes /* _data */) internal {
         // has to be defined
     }
+
+    function renounceMinter() public onlyOwner {
+        erc677token().renounceMinter();
+    }
 }
