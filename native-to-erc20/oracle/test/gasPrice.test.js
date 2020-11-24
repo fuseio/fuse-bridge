@@ -15,22 +15,40 @@ describe('gasPrice', () => {
     it('should fetch the gas price from the oracle', async () => {
       // given
       const oracleFnMock = () => Promise.resolve('1')
+      const secondaryOracleFnMock = () => Promise.resolve('2')
 
       // when
       const gasPrice = await fetchGasPrice({
-        oracleFn: oracleFnMock
+        oracleFn: oracleFnMock,
+        secondaryOracleFn: secondaryOracleFnMock
       })
 
       // then
       expect(gasPrice).to.equal('1')
     })
-    it('should return null if the oracle fail', async () => {
+    it('should use secondary if the first oracle fail', async () => {
       // given
       const oracleFnMock = () => Promise.reject(new Error('oracle failed'))
+      const secondaryOracleFnMock = () => Promise.resolve('2')
 
       // when
       const gasPrice = await fetchGasPrice({
-        oracleFn: oracleFnMock
+        oracleFn: oracleFnMock,
+        secondaryOracleFn: secondaryOracleFnMock
+      })
+
+      // then
+      expect(gasPrice).to.equal('2')
+    })
+    it('should return null if both the oracle fail', async () => {
+      // given
+      const oracleFnMock = () => Promise.reject(new Error('oracle failed'))
+      const secondaryOracleFnMock = () => Promise.reject(new Error('oracle failed'))
+
+      // when
+      const gasPrice = await fetchGasPrice({
+        oracleFn: oracleFnMock,
+        secondaryOracleFn: secondaryOracleFnMock
       })
 
       // then

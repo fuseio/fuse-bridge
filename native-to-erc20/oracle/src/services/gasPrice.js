@@ -30,16 +30,23 @@ async function fetchGasPriceFromOracle (oracleUrl, speedType, factor) {
 }
 
 async function fetchGasPrice ({ oracleFn, secondaryOracleFn }) {
-  let gasPrice = null
   try {
-    gasPrice = await oracleFn()
-    logger.debug({ gasPrice }, 'Gas price updated using the oracle')
+    const gasPrice = await oracleFn()
+    logger.debug({ gasPrice }, 'Gas price updated using the first oracle')
+    return gasPrice
   } catch (e) {
     logger.error(`Primary Gas Price API is not available. ${e.message}`)
-    logger.info('Using the secondary Gas Price API')
-    gasPrice = await secondaryOracleFn()
   }
-  return gasPrice
+
+  try {
+    logger.info('Using the secondary Gas Price API')
+    const gasPrice = await secondaryOracleFn()
+    logger.debug({ gasPrice }, 'Gas price updated using the first oracle')
+    return gasPrice
+  } catch (e) {
+    logger.error(`Secondary Gas Price API is not available. ${e.message}`)
+  }
+  return null
 }
 
 let fetchGasPriceInterval = null
