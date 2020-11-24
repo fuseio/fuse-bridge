@@ -43,34 +43,6 @@ library Message {
         }
     }
 
-    function parseNewSetMessage(bytes message)
-        internal
-        returns(address[] memory newSet, bytes32 txHash, uint256 blockNumber, address contractAddress)
-    {
-        uint256 msgLength;
-        uint256 position;
-        address newSetMember;
-        assembly {
-            msgLength := mload(message)
-            txHash := mload(add(message, 32))
-            blockNumber:= mload(add(message, 64))
-            contractAddress := mload(add(message, 84))
-            position := 104
-        }
-        uint256 newSetLength = (msgLength - position) / 20 + 1;
-        newSet = new address[](newSetLength);
-        uint256 i = 0;
-        while (position <= msgLength) {
-            assembly {
-                newSetMember := mload(add(message, position))
-            }
-            newSet[i] = newSetMember;
-            position += 20;
-            i++;
-        }
-        return (newSet, txHash, blockNumber, contractAddress);
-    }
-
     function isMessageValid(bytes _msg) internal pure returns(bool) {
         return _msg.length == requiredMessageLength();
     }
@@ -167,37 +139,6 @@ library Message {
         require(_vs.length == _ss.length);
         require(_vs.length >= requiredSignatures);
         bytes32 hash = hashMessage(_message);
-        address[] memory encounteredAddresses = new address[](requiredSignatures);
-        uint256 signaturesCount;
-
-        for (uint256 i = 0; i < _vs.length; i++) {
-            address recoveredAddress = ecrecover(hash, _vs[i], _rs[i], _ss[i]);
-            if(_validatorContract.isValidator(recoveredAddress)) {
-                if (!addressArrayContains(encounteredAddresses, recoveredAddress)) {
-                    encounteredAddresses[i] = recoveredAddress;
-                    signaturesCount++;
-
-                    if (signaturesCount == requiredSignatures) {
-                        return;
-                    }
-                }
-            }
-        }
-        require(signaturesCount >=requiredSignatures);
-    }
-
-    function hasEnoughValidNewSetSignaturesForeignBridgeValidator(
-        bytes _message,
-        uint8[] _vs,
-        bytes32[] _rs,
-        bytes32[] _ss,
-        IForeignBridgeValidators _validatorContract) internal view
-    {
-        uint256 requiredSignatures = _validatorContract.requiredSignatures();
-        require(_vs.length == _rs.length);
-        require(_vs.length == _ss.length);
-        require(_vs.length >= requiredSignatures);
-        bytes32 hash = hashMessageOfUnknownLength(_message);
         address[] memory encounteredAddresses = new address[](requiredSignatures);
         uint256 signaturesCount;
 
