@@ -5,7 +5,6 @@ const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
 const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home, web3Foreign } = require('../../services/web3')
-const { getBlockNumber } = require('../../tx/web3')
 const { signatureToVRS } = require('../../utils/message')
 const estimateGas = require('./estimateGas')
 const {
@@ -13,9 +12,7 @@ const {
   IncompatibleContractError,
   InvalidValidatorError
 } = require('../../utils/errors')
-const { MAX_CONCURRENT_EVENTS, MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY } = require('../../utils/constants')
-
-const { ALWAYS_RELAY_COLLECTED_SIGNATURES } = process.env
+const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
@@ -47,37 +44,22 @@ function processCollectedSignaturesBuilder (config) {
       foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
+    // TODO: take only the signatures of foreign bridge validators
     rootLogger.debug(`Processing ${signatures.length} CollectedSignatures events`)
     const callbacks = signatures.map(colSignature =>
       limit(async () => {
-        const { blockNumber } = colSignature
-        const { authorityResponsibleForRelay, messageHash, NumberOfCollectedSignatures } = colSignature.returnValues
+        const { messageHash, NumberOfCollectedSignatures } = colSignature.returnValues
 
         const logger = rootLogger.child({
           eventTransactionHash: colSignature.transactionHash
         })
 
-        let runProcess = true
-        if (!ALWAYS_RELAY_COLLECTED_SIGNATURES &&
-            authorityResponsibleForRelay !== web3Home.utils.toChecksumAddress(config.validatorAddress)) {
-          const currentBlockNumber = await getBlockNumber(web3Home)
-          if (currentBlockNumber > blockNumber + MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY) {
-            const validators = await homeValidatorContract.methods.getValidators().call()
-            const i = (currentBlockNumber - blockNumber) % validators.length % MAX_BLOCKS_TO_ALLOW_AUTHORITY_RESPONSIBLE_TO_RELAY
-            const nextAuthorityTryingToRelay = validators[i]
-            if (nextAuthorityTryingToRelay === web3Home.utils.toChecksumAddress(config.validatorAddress)) {
-              logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash} but is next in line after waiting for ${authorityResponsibleForRelay} too long`)
-            } else {
-              logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash}, waiting for ${authorityResponsibleForRelay} too long, next in line is ${nextAuthorityTryingToRelay}`)
-              runProcess = false
-            }
-          } else {
-            logger.info(`Validator not responsible for relaying CollectedSignatures ${colSignature.transactionHash}, waiting for ${authorityResponsibleForRelay}`)
-            runProcess = false
-          }
-        }
+        const isForeignValidator = await foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
 
-        if (runProcess) {
+        // const foreignValidators = await foreignValidatorContract.methods.validators().call()
+        // const numberOfRequiredSignatures = await foreignValidatorContract.methods.requiredSignatures().call()
+
+        if (isForeignValidator) {
           logger.info(`Processing CollectedSignatures ${colSignature.transactionHash}`)
           const message = await homeBridge.methods.message(messageHash).call()
           const expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
