@@ -1,8 +1,7 @@
 require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
-const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
-const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
+const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home, web3Foreign } = require('../../services/web3')
 const { signatureToVRS } = require('../../utils/message')
@@ -13,16 +12,16 @@ const {
   InvalidValidatorError
 } = require('../../utils/errors')
 const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
-const path = require('path')
 
 // const func = async () => {
+//   const path = require('path')
 //   const config = require(path.join('../../../config/', process.argv[2]))
 //   console.log({ web3Foreign })
 //   const foreignBridgeAddress = '0x3014ca10b91cb3D0AD85fEf7A3Cb95BCAc9c0f79'
 //   const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
 //   const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
 //   rootLogger.debug({ foreignValidatorContractAddress }, 'Validator contract address obtained')
-//   const foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
+//   const foreignValidatorContract = new web3Foreign.eth.Contract(bridgeValidatorsABI, foreignValidatorContractAddress)
 
 //   console.log(await foreignValidatorContract.methods.validators().call())
 
@@ -54,14 +53,14 @@ function processCollectedSignaturesBuilder (config) {
       rootLogger.debug('Getting home validator contract address')
       const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
       rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
-      homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
+      homeValidatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, homeValidatorContractAddress)
     }
 
     if (foreignValidatorContract === null) {
       rootLogger.debug('Getting validator contract address')
       const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
       rootLogger.debug({ foreignValidatorContractAddress }, 'Validator contract address obtained')
-      foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
+      foreignValidatorContract = new web3Foreign.eth.Contract(bridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
     // TODO: take only the signatures of foreign bridge validators

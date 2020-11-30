@@ -31,12 +31,24 @@
     "anonymous": false,
     "inputs": [
       {
-        "indexed": false,
-        "name": "validators",
-        "type": "address[]"
+        "indexed": true,
+        "name": "validator",
+        "type": "address"
       }
     ],
-    "name": "ValidatorsChanged",
+    "name": "ValidatorAdded",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "name": "validator",
+        "type": "address"
+      }
+    ],
+    "name": "ValidatorRemoved",
     "type": "event"
   },
   {
@@ -72,11 +84,15 @@
     "constant": false,
     "inputs": [
       {
+        "name": "_requiredSignatures",
+        "type": "uint256"
+      },
+      {
         "name": "_initialValidators",
         "type": "address[]"
       },
       {
-        "name": "_foreignBridge",
+        "name": "_owner",
         "type": "address"
       }
     ],
@@ -95,17 +111,40 @@
     "constant": false,
     "inputs": [
       {
-        "name": "_validators",
-        "type": "address[]"
+        "name": "_validator",
+        "type": "address"
       }
     ],
-    "name": "setValidators",
-    "outputs": [
+    "name": "addValidator",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
       {
-        "name": "",
-        "type": "bool"
+        "name": "_validator",
+        "type": "address"
       }
     ],
+    "name": "removeValidator",
+    "outputs": [],
+    "payable": false,
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "constant": false,
+    "inputs": [
+      {
+        "name": "_requiredSignatures",
+        "type": "uint256"
+      }
+    ],
+    "name": "setRequiredSignatures",
+    "outputs": [],
     "payable": false,
     "stateMutability": "nonpayable",
     "type": "function"
@@ -113,11 +152,33 @@
   {
     "constant": true,
     "inputs": [],
-    "name": "validators",
+    "name": "getBridgeValidatorsInterfacesVersion",
+    "outputs": [
+      {
+        "name": "major",
+        "type": "uint64"
+      },
+      {
+        "name": "minor",
+        "type": "uint64"
+      },
+      {
+        "name": "patch",
+        "type": "uint64"
+      }
+    ],
+    "payable": false,
+    "stateMutability": "pure",
+    "type": "function"
+  },
+  {
+    "constant": true,
+    "inputs": [],
+    "name": "requiredSignatures",
     "outputs": [
       {
         "name": "",
-        "type": "address[]"
+        "type": "uint256"
       }
     ],
     "payable": false,
@@ -142,11 +203,11 @@
     "constant": true,
     "inputs": [
       {
-        "name": "_address",
+        "name": "_validator",
         "type": "address"
       }
     ],
-    "name": "isValidator",
+    "name": "validators",
     "outputs": [
       {
         "name": "",
@@ -159,12 +220,17 @@
   },
   {
     "constant": true,
-    "inputs": [],
-    "name": "requiredSignatures",
+    "inputs": [
+      {
+        "name": "_validator",
+        "type": "address"
+      }
+    ],
+    "name": "isValidator",
     "outputs": [
       {
         "name": "",
-        "type": "uint256"
+        "type": "bool"
       }
     ],
     "payable": false,
@@ -197,28 +263,6 @@
     ],
     "payable": false,
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "constant": true,
-    "inputs": [],
-    "name": "getForeignBridgeValidatorsInterfacesVersion",
-    "outputs": [
-      {
-        "name": "major",
-        "type": "uint64"
-      },
-      {
-        "name": "minor",
-        "type": "uint64"
-      },
-      {
-        "name": "patch",
-        "type": "uint64"
-      }
-    ],
-    "payable": false,
-    "stateMutability": "pure",
     "type": "function"
   }
 ]
