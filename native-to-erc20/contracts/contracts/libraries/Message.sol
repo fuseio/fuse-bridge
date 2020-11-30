@@ -1,7 +1,6 @@
 pragma solidity 0.4.24;
 
 import "../interfaces/IBridgeValidators.sol";
-import "../interfaces/IForeignBridgeValidators.sol";
 
 library Message {
     function addressArrayContains(address[] array, address value) internal pure returns (bool) {
@@ -132,7 +131,7 @@ library Message {
         uint8[] _vs,
         bytes32[] _rs,
         bytes32[] _ss,
-        IForeignBridgeValidators _validatorContract) internal view
+        IBridgeValidators _validatorContract) internal view
     {
         uint256 requiredSignatures = _validatorContract.requiredSignatures();
         require(_vs.length == _rs.length);

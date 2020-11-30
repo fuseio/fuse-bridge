@@ -1,6 +1,6 @@
 const ForeignBridge = artifacts.require("ForeignBridgeNativeToErc.sol");
 const ForeignBridgeV2 = artifacts.require("ForeignBridgeV2.sol");
-const ForeignBridgeValidators = artifacts.require("ForeignBridgeValidatorsMock.sol");
+const BridgeValidators = artifacts.require("BridgeValidatorsMock.sol");
 const EternalStorageProxy = artifacts.require("EternalStorageProxy.sol");
 
 const POA20 = artifacts.require("ERC677BridgeToken.sol");
@@ -34,11 +34,10 @@ const getEvents = function(contract, filter) {
 contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
   let validatorContract, authorities, owner, token;
   before(async () => {
-    validatorContract = await ForeignBridgeValidators.new()
+    validatorContract = await BridgeValidators.new()
     authorities = [accounts[1], accounts[2]];
     owner = accounts[0]
-    await validatorContract.initialize(authorities, owner)
-    await validatorContract.setRequiredSignatures(1)
+    await validatorContract.initialize(1, authorities, owner)
   })
 
   describe('#initialize', async () => {
@@ -215,12 +214,12 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
   describe('#executeSignatures with 2 minimum signatures', async () => {
     let multisigValidatorContract, twoAuthorities, ownerOfValidatorContract, foreignBridgeWithMultiSignatures
     beforeEach(async () => {
-      multisigValidatorContract = await ForeignBridgeValidators.new()
+      multisigValidatorContract = await BridgeValidators.new()
       token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
       twoAuthorities = [accounts[0], accounts[1]];
       ownerOfValidatorContract = accounts[3]
       const halfEther = web3.toBigNumber(web3.toWei(0.5, "ether"));
-      await multisigValidatorContract.initialize(twoAuthorities, ownerOfValidatorContract, {from: ownerOfValidatorContract})
+      await multisigValidatorContract.initialize(2, twoAuthorities, ownerOfValidatorContract, {from: ownerOfValidatorContract})
       foreignBridgeWithMultiSignatures = await ForeignBridge.new()
       const oneEther = web3.toBigNumber(web3.toWei(1, "ether"));
       await foreignBridgeWithMultiSignatures.initialize(multisigValidatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted, {from: ownerOfValidatorContract});
@@ -271,8 +270,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       const recipient = accounts[8]
       const authoritiesFiveAccs = [accounts[1], accounts[2], accounts[3], accounts[4], accounts[5]]
       const ownerOfValidators = accounts[0]
-      const validatorContractWith3Signatures = await ForeignBridgeValidators.new()
-      await validatorContractWith3Signatures.initialize(authoritiesFiveAccs, ownerOfValidators)
+      const validatorContractWith3Signatures = await BridgeValidators.new()
+      await validatorContractWith3Signatures.initialize(3, authoritiesFiveAccs, ownerOfValidators)
       const erc20Token = await POA20.new("Some ERC20", "RSZT", 18);
       const value = web3.toBigNumber(web3.toWei(0.5, "ether"));
       const foreignBridgeWithThreeSigs = await ForeignBridge.new()
@@ -308,8 +307,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       const recipient = accounts[8]
       const authoritiesFiveAccs = [accounts[1], accounts[2], accounts[3], accounts[4], accounts[5]]
       const ownerOfValidators = accounts[0]
-      const validatorContractWith3Signatures = await ForeignBridgeValidators.new()
-      await validatorContractWith3Signatures.initialize(authoritiesFiveAccs, ownerOfValidators)
+      const validatorContractWith3Signatures = await BridgeValidators.new()
+      await validatorContractWith3Signatures.initialize(3, authoritiesFiveAccs, ownerOfValidators)
       const erc20Token = await POA20.new("Some ERC20", "RSZT", 18);
       const value = web3.toBigNumber(web3.toWei(0.5, "ether"));
       const foreignBridgeWithThreeSigs = await ForeignBridge.new()
@@ -585,12 +584,12 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       const FOREIGN_MIN_AMOUNT_PER_TX = minPerTx;
       // Validators Contract
       let validatorsProxy = await EternalStorageProxy.new().should.be.fulfilled;
-      const validatorsContractImpl = await ForeignBridgeValidators.new().should.be.fulfilled;
+      const validatorsContractImpl = await BridgeValidators.new().should.be.fulfilled;
       await validatorsProxy.upgradeTo('1', validatorsContractImpl.address).should.be.fulfilled;
       validatorsContractImpl.address.should.be.equal(await validatorsProxy.implementation())
 
-      validatorsProxy = await ForeignBridgeValidators.at(validatorsProxy.address);
-      await validatorsProxy.initialize(VALIDATORS, PROXY_OWNER).should.be.fulfilled;
+      validatorsProxy = await BridgeValidators.at(validatorsProxy.address);
+      await validatorsProxy.initialize(1, VALIDATORS, PROXY_OWNER).should.be.fulfilled;
       // POA20
       let token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
 

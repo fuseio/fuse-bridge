@@ -4,10 +4,9 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../BasicBridge.sol";
 import "../../ERC677Receiver.sol";
 import "../BasicForeignBridge.sol";
-import "./ForeignValidatable.sol";
 import "../ERC677Bridge.sol";
 
-contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBridge, ERC677Bridge, ForeignValidatable {
+contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBridge, ERC677Bridge {
 
     /// Event created on money withdraw.
     event UserRequestForAffirmation(address recipient, uint256 value);
