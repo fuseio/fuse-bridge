@@ -13,29 +13,8 @@ const {
 } = require('../../utils/errors')
 const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
-// const func = async () => {
-//   const path = require('path')
-//   const config = require(path.join('../../../config/', process.argv[2]))
-//   console.log({ web3Foreign })
-//   const foreignBridgeAddress = '0x3014ca10b91cb3D0AD85fEf7A3Cb95BCAc9c0f79'
-//   const foreignBridge = new web3Foreign.eth.Contract(config.foreignBridgeAbi, foreignBridgeAddress)
-//   const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
-//   rootLogger.debug({ foreignValidatorContractAddress }, 'Validator contract address obtained')
-//   const foreignValidatorContract = new web3Foreign.eth.Contract(bridgeValidatorsABI, foreignValidatorContractAddress)
-
-//   console.log(await foreignValidatorContract.methods.validators().call())
-
-//   const sig = '0xed157c39b80281741e7d4075655f25b11a9182f12d90878a1ba9bfed111c899620b74dc25ba2f581be753e11673413eb90f1f08285c2100d8e16c6799818c77d1b'
-//   const { v, r, s } = signatureToVRS(sig)
-//   const add = web3Home.eth.accounts.recover(s, web3Home.utils.toHex(v), r, s)
-//   console.log({ add })
-// }
-
-// func()
-
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
-let homeValidatorContract = null
 let foreignValidatorContract = null
 
 function processCollectedSignaturesBuilder (config) {
@@ -49,18 +28,15 @@ function processCollectedSignaturesBuilder (config) {
 
     const txToSend = []
 
-    if (homeValidatorContract === null) {
-      rootLogger.debug('Getting home validator contract address')
-      const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
-      rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
-      homeValidatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, homeValidatorContractAddress)
-    }
-
     if (foreignValidatorContract === null) {
       rootLogger.debug('Getting validator contract address')
       const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
       rootLogger.debug({ foreignValidatorContractAddress }, 'Validator contract address obtained')
       foreignValidatorContract = new web3Foreign.eth.Contract(bridgeValidatorsABI, foreignValidatorContractAddress)
+    }
+
+    const isResponsibleForRelay = () => {
+      return foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
     }
 
     // TODO: take only the signatures of foreign bridge validators
@@ -73,18 +49,15 @@ function processCollectedSignaturesBuilder (config) {
           eventTransactionHash: colSignature.transactionHash
         })
 
-        const isForeignValidator = await foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
+        const responsibleForRelay = await isResponsibleForRelay()
 
-        if (isForeignValidator) {
+        if (responsibleForRelay) {
           logger.info(`Processing CollectedSignatures ${colSignature.transactionHash}`)
-          const foreignValidators = await foreignValidatorContract.methods.validators().call()
-          const numberOfRequiredSignatures = await foreignValidatorContract.methods.requiredSignatures().call()
-
           const message = await homeBridge.methods.message(messageHash).call()
           const expectedMessageLength = await homeBridge.methods.requiredMessageLength().call()
 
           const requiredSignatures = []
-          requiredSignatures.length = numberOfRequiredSignatures
+          requiredSignatures.length = NumberOfCollectedSignatures
           requiredSignatures.fill(0)
 
           const [v, r, s] = [[], [], []]
@@ -93,12 +66,9 @@ function processCollectedSignaturesBuilder (config) {
             logger.debug({ index }, 'Getting message signature')
             const signature = await homeBridge.methods.signature(messageHash, index).call()
             const recover = signatureToVRS(signature)
-            const validatorAddress = web3Home.eth.accounts.recover(signature, web3Home.utils.toHex(recover.v), recover.r, recover.s)
-            if (foreignValidators.includes(validatorAddress)) {
-              v.push(recover.v)
-              r.push(recover.r)
-              s.push(recover.s)
-            }
+            v.push(recover.v)
+            r.push(recover.r)
+            s.push(recover.s)
           })
 
           await Promise.all(signaturePromises)
