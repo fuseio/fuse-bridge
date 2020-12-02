@@ -12,7 +12,7 @@ const {
   InvalidValidatorError
 } = require('../../utils/errors')
 const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
-
+const { FOREIGN_VALIDATOR_RESPONSIBLE_TO_RELAY } = process.env
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
 let foreignValidatorContract = null
@@ -36,7 +36,7 @@ function processCollectedSignaturesBuilder (config) {
     }
 
     const isResponsibleForRelay = () => {
-      return foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
+      return FOREIGN_VALIDATOR_RESPONSIBLE_TO_RELAY && foreignValidatorContract.methods.isValidator(web3Home.utils.toChecksumAddress(config.validatorAddress)).call()
     }
 
     // TODO: take only the signatures of foreign bridge validators
