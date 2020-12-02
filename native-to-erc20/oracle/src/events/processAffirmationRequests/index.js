@@ -2,7 +2,7 @@ require('dotenv').config()
 const rootLogger = require('../../services/logger')
 const { web3Home } = require('../../services/web3')
 const promiseLimit = require('promise-limit')
-const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
+const homeBridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
 const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 const estimateGas = require('./estimateGas')
 const {

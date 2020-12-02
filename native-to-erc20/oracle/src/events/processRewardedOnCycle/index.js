@@ -1,8 +1,7 @@
 require('dotenv').config()
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
-const homeBridgeValidatorsABI = require('../../../abis/Consensus.abi')
-const foreignBridgeValidatorsABI = require('../../../abis/ForeignBridgeValidators.abi')
+const bridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home, web3Foreign } = require('../../services/web3')
 const { createMessage } = require('../../utils/message')
@@ -40,14 +39,14 @@ function processRewardedOnCycleBuilder (config) {
       rootLogger.debug('Getting home validator contract address')
       const homeValidatorContractAddress = await homeBridge.methods.validatorContract().call()
       rootLogger.debug({ homeValidatorContractAddress }, 'Home validator contract address obtained')
-      homeValidatorContract = new web3Home.eth.Contract(homeBridgeValidatorsABI, homeValidatorContractAddress)
+      homeValidatorContract = new web3Home.eth.Contract(bridgeValidatorsABI, homeValidatorContractAddress)
     }
 
     if (foreignValidatorContract === null) {
       rootLogger.debug('Getting foreign validator contract address')
       const foreignValidatorContractAddress = await foreignBridge.methods.validatorContract().call()
       rootLogger.debug({ foreignValidatorContractAddress }, 'Foreign validator contract address obtained')
-      foreignValidatorContract = new web3Foreign.eth.Contract(foreignBridgeValidatorsABI, foreignValidatorContractAddress)
+      foreignValidatorContract = new web3Foreign.eth.Contract(bridgeValidatorsABI, foreignValidatorContractAddress)
     }
 
     rootLogger.debug(`Processing ${rewardedOnCycleEvents.length} RewardedOnCycle events`)

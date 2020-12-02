@@ -542,7 +542,7 @@ contract('HomeBridge_Native_to_ERC20', async (accounts) => {
     })
   })
 
-  describe('#submitSignatureOfMessageWithUnknownLength', async () => {
+ /*  describe('#submitSignatureOfMessageWithUnknownLength', async () => {
     let validatorContractWith2Signatures,authoritiesTwoAccs,ownerOfValidators,tokenPOA20,homeBridgeWithTwoSigs
     beforeEach(async () => {
       validatorContractWith2Signatures = await BridgeValidators.new()
@@ -655,7 +655,7 @@ contract('HomeBridge_Native_to_ERC20', async (accounts) => {
       logs[1].args.authorityResponsibleForRelay.should.be.equal(authoritiesTwoAccs[1])
     })
   })
-
+ */
   describe('#requiredMessageLength', async () => {
     beforeEach(async () => {
       homeContract = await HomeBridge.new()

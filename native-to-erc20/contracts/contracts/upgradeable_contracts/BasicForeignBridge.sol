@@ -2,9 +2,10 @@ pragma solidity 0.4.24;
 
 import "../upgradeability/EternalStorage.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./Validatable.sol";
 import "../libraries/Message.sol";
 
-contract BasicForeignBridge is EternalStorage {
+contract BasicForeignBridge is EternalStorage, Validatable {
     using SafeMath for uint256;
 
     /// triggered when relay of deposit from HomeBridge is complete

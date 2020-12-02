@@ -13,6 +13,8 @@ contract BridgeValidators is IBridgeValidators, EternalStorage, EternalOwnable {
     event ValidatorRemoved (address indexed validator);
     event RequiredSignaturesChanged (uint256 requiredSignatures);
 
+    bytes32 internal constant REQUIRED_SIGNATURES = keccak256(abi.encodePacked("requiredSignatures"));
+    
     function initialize(uint256 _requiredSignatures, address[] _initialValidators, address _owner)
       external returns(bool)
     {
@@ -28,7 +30,7 @@ contract BridgeValidators is IBridgeValidators, EternalStorage, EternalOwnable {
             setValidator(_initialValidators[i], true);
             emit ValidatorAdded(_initialValidators[i]);
         }
-        uintStorage[keccak256(abi.encodePacked("requiredSignatures"))] = _requiredSignatures;
+        uintStorage[REQUIRED_SIGNATURES] = _requiredSignatures;
         uintStorage[keccak256("deployedAtBlock")] = block.number;
         setInitialize(true);
         emit RequiredSignaturesChanged(_requiredSignatures);
@@ -54,7 +56,7 @@ contract BridgeValidators is IBridgeValidators, EternalStorage, EternalOwnable {
     function setRequiredSignatures(uint256 _requiredSignatures) external onlyOwner {
         require(validatorCount() >= _requiredSignatures);
         require(_requiredSignatures != 0);
-        uintStorage[keccak256(abi.encodePacked("requiredSignatures"))] = _requiredSignatures;
+        uintStorage[REQUIRED_SIGNATURES] = _requiredSignatures;
         emit RequiredSignaturesChanged(_requiredSignatures);
     }
 
@@ -63,7 +65,7 @@ contract BridgeValidators is IBridgeValidators, EternalStorage, EternalOwnable {
     }
 
     function requiredSignatures() public view returns(uint256) {
-        return uintStorage[keccak256(abi.encodePacked("requiredSignatures"))];
+        return uintStorage[REQUIRED_SIGNATURES];
     }
 
     function validatorCount() public view returns(uint256) {

@@ -1,11 +1,11 @@
 pragma solidity 0.4.24;
 
-import '../upgradeable_contracts/native_to_erc20/ForeignBridgeValidators.sol';
+import '../upgradeable_contracts/BridgeValidators.sol';
 
-contract ForeignBridgeValidatorsMock is ForeignBridgeValidators {
+contract BridgeValidatorsMock is BridgeValidators {
   using SafeMath for uint256;
 
-  function setRequiredSignatures(uint256 _requiredSignatures) public {
+  function setRequiredSignatures(uint256 _requiredSignatures) external {
     uintStorage[REQUIRED_SIGNATURES] = _requiredSignatures;
     emit RequiredSignaturesChanged(requiredSignatures());
   }

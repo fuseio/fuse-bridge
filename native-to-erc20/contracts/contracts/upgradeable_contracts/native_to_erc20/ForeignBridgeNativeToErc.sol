@@ -4,15 +4,12 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../BasicBridge.sol";
 import "../../ERC677Receiver.sol";
 import "../BasicForeignBridge.sol";
-import "./ForeignValidatable.sol";
 import "../ERC677Bridge.sol";
 
-contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBridge, ERC677Bridge, ForeignValidatable {
+contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBridge, ERC677Bridge {
 
     /// Event created on money withdraw.
     event UserRequestForAffirmation(address recipient, uint256 value);
-
-    event RelayedNewSetMessage(address[] newSet, bytes32 transactionHash);
 
     function initialize(
         address _validatorContract,
@@ -74,22 +71,6 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
         } else {
             onFailedMessage(recipient, amount, txHash);
         }
-    }
-
-    function executeNewSetSignatures(uint8[] vs, bytes32[] rs, bytes32[] ss, bytes message) external {
-        Message.hasEnoughValidNewSetSignaturesForeignBridgeValidator(message, vs, rs, ss, validatorContract());
-        address[] memory newSet;
-        bytes32 txHash;
-        uint256 blockNumber;
-        address contractAddress;
-        (newSet, txHash, blockNumber, contractAddress) = Message.parseNewSetMessage(message);
-        require(contractAddress == address(this));
-        require(!relayedMessages(txHash));
-        require(blockNumber > lastRelayedBlockNumber());
-        setRelayedMessages(txHash, true);
-        setLastRelayedBlockNumber(blockNumber);
-        require(validatorContract().setValidators(newSet));
-        emit RelayedNewSetMessage(newSet, txHash);
     }
 
     function onExecuteMessage(address _recipient, uint256 _amount) internal returns(bool){

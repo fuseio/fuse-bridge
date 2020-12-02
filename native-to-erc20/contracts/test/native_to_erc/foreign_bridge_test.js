@@ -1,6 +1,6 @@
 const ForeignBridge = artifacts.require("ForeignBridgeNativeToErc.sol");
 const ForeignBridgeV2 = artifacts.require("ForeignBridgeV2.sol");
-const ForeignBridgeValidators = artifacts.require("ForeignBridgeValidatorsMock.sol");
+const BridgeValidators = artifacts.require("BridgeValidatorsMock.sol");
 const EternalStorageProxy = artifacts.require("EternalStorageProxy.sol");
 
 const POA20 = artifacts.require("ERC677BridgeToken.sol");
@@ -34,11 +34,10 @@ const getEvents = function(contract, filter) {
 contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
   let validatorContract, authorities, owner, token;
   before(async () => {
-    validatorContract = await ForeignBridgeValidators.new()
+    validatorContract = await BridgeValidators.new()
     authorities = [accounts[1], accounts[2]];
     owner = accounts[0]
-    await validatorContract.initialize(authorities, owner)
-    await validatorContract.setRequiredSignatures(1)
+    await validatorContract.initialize(1, authorities, owner)
   })
 
   describe('#initialize', async () => {
@@ -215,12 +214,12 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
   describe('#executeSignatures with 2 minimum signatures', async () => {
     let multisigValidatorContract, twoAuthorities, ownerOfValidatorContract, foreignBridgeWithMultiSignatures
     beforeEach(async () => {
-      multisigValidatorContract = await ForeignBridgeValidators.new()
+      multisigValidatorContract = await BridgeValidators.new()
       token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
       twoAuthorities = [accounts[0], accounts[1]];
       ownerOfValidatorContract = accounts[3]
       const halfEther = web3.toBigNumber(web3.toWei(0.5, "ether"));
-      await multisigValidatorContract.initialize(twoAuthorities, ownerOfValidatorContract, {from: ownerOfValidatorContract})
+      await multisigValidatorContract.initialize(2, twoAuthorities, ownerOfValidatorContract, {from: ownerOfValidatorContract})
       foreignBridgeWithMultiSignatures = await ForeignBridge.new()
       const oneEther = web3.toBigNumber(web3.toWei(1, "ether"));
       await foreignBridgeWithMultiSignatures.initialize(multisigValidatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted, {from: ownerOfValidatorContract});
@@ -271,8 +270,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       const recipient = accounts[8]
       const authoritiesFiveAccs = [accounts[1], accounts[2], accounts[3], accounts[4], accounts[5]]
       const ownerOfValidators = accounts[0]
-      const validatorContractWith3Signatures = await ForeignBridgeValidators.new()
-      await validatorContractWith3Signatures.initialize(authoritiesFiveAccs, ownerOfValidators)
+      const validatorContractWith3Signatures = await BridgeValidators.new()
+      await validatorContractWith3Signatures.initialize(3, authoritiesFiveAccs, ownerOfValidators)
       const erc20Token = await POA20.new("Some ERC20", "RSZT", 18);
       const value = web3.toBigNumber(web3.toWei(0.5, "ether"));
       const foreignBridgeWithThreeSigs = await ForeignBridge.new()
@@ -308,8 +307,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       const recipient = accounts[8]
       const authoritiesFiveAccs = [accounts[1], accounts[2], accounts[3], accounts[4], accounts[5]]
       const ownerOfValidators = accounts[0]
-      const validatorContractWith3Signatures = await ForeignBridgeValidators.new()
-      await validatorContractWith3Signatures.initialize(authoritiesFiveAccs, ownerOfValidators)
+      const validatorContractWith3Signatures = await BridgeValidators.new()
+      await validatorContractWith3Signatures.initialize(3, authoritiesFiveAccs, ownerOfValidators)
       const erc20Token = await POA20.new("Some ERC20", "RSZT", 18);
       const value = web3.toBigNumber(web3.toWei(0.5, "ether"));
       const foreignBridgeWithThreeSigs = await ForeignBridge.new()
@@ -478,115 +477,6 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
     })
   })
 
-  describe('#executeNewSetSignatures', async () => {
-    beforeEach(async () => {
-      foreignBridge = await ForeignBridge.new();
-      token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
-      validatorContract = await ForeignBridgeValidators.new();
-      authorities = [accounts[1], accounts[2]];
-      owner = accounts[0];
-      await validatorContract.initialize(authorities, owner);
-      await validatorContract.setRequiredSignatures(1);
-      await validatorContract.setOwnerMock(foreignBridge.address);
-      await foreignBridge.initialize(validatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted);
-    })
-    it('should allow to update a new set', async () => {
-      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var blockNumber = web3.toBigNumber(217455)
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
-      var signature = await sign(authorities[0], message);
-      var vrs = signatureToVRS(signature);
-      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      const {logs} = await foreignBridge.executeNewSetSignatures([vrs.v], [vrs.r], [vrs.s], message).should.be.fulfilled;
-      logs[0].event.should.be.equal("RelayedNewSetMessage");
-      logs[0].args.transactionHash.should.be.equal(transactionHash);
-      logs[0].args.newSet.should.be.deep.equal([accounts[3], accounts[4]]);
-      true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
-    })
-    it('should allow to update a new set if there are enough validator signatures even when some are from non-validators', async () => {
-      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var blockNumber = web3.toBigNumber(217455)
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
-      var signature1 = await sign(authorities[0], message);
-      var vrs1 = signatureToVRS(signature1);
-      var signature2 = await sign(accounts[3], message);
-      var vrs2 = signatureToVRS(signature2);
-      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      const {logs} = await foreignBridge.executeNewSetSignatures([vrs1.v, vrs2.v], [vrs1.r, vrs2.r], [vrs1.s, vrs2.s], message).should.be.fulfilled;
-      logs[0].event.should.be.equal("RelayedNewSetMessage");
-      logs[0].args.transactionHash.should.be.equal(transactionHash);
-      logs[0].args.newSet.should.be.deep.equal([accounts[3], accounts[4]]);
-      true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
-    })
-
-    it('should allow to update a new set if there are more validator signatures than required signatures', async () => {
-      console.log((await validatorContract.requiredSignatures()).toString())
-
-      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var blockNumber = web3.toBigNumber(217455)
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
-      var signature1 = await sign(authorities[0], message);
-      var vrs1 = signatureToVRS(signature1);
-
-      var signature2 = await sign(authorities[1], message);
-      var vrs2 = signatureToVRS(signature2);
-
-      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      const {logs} = await foreignBridge.executeNewSetSignatures([vrs1.v, vrs2.v], [vrs1.r, vrs2.r], [vrs1.s, vrs2.s], message).should.be.fulfilled;
-      logs[0].event.should.be.equal("RelayedNewSetMessage");
-      logs[0].args.transactionHash.should.be.equal(transactionHash);
-      logs[0].args.newSet.should.be.deep.equal([accounts[3], accounts[4]]);
-      true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
-    })
-
-    it('should not allow to update a new set with same transactionHash but different addresses', async () => {
-      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      // tx 1
-      var blockNumber = web3.toBigNumber(217455)
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
-      var signature = await sign(authorities[0], message);
-      var vrs = signatureToVRS(signature);
-      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      await foreignBridge.executeNewSetSignatures([vrs.v], [vrs.r], [vrs.s], message).should.be.fulfilled;
-      (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
-
-      // tx 2
-      var blockNumber = web3.toBigNumber(217455)
-      var message2 = createNewSetMessage([accounts[5]], transactionHash, blockNumber, foreignBridge.address);
-      var signature2 = await sign(authorities[0], message2);
-      var vrs2 = signatureToVRS(signature2);
-      true.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      await foreignBridge.executeNewSetSignatures([vrs2.v], [vrs2.r], [vrs2.s], message2).should.be.rejectedWith(ERROR_MSG);
-      (await validatorContract.validators()).should.be.deep.equal([accounts[3], accounts[4]])
-    })
-    it('should not allow to update a new set with signature from non-validator', async () => {
-      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var blockNumber = web3.toBigNumber(217455)
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
-      var signature = await sign(accounts[3], message);
-      var vrs = signatureToVRS(signature);
-      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      await foreignBridge.executeNewSetSignatures([vrs.v], [vrs.r], [vrs.s], message).should.be.rejectedWith(ERROR_MSG);
-      (await validatorContract.validators()).should.be.deep.equal([authorities[0], authorities[1]])
-    })
-    it('should not allow to update a new set with duplicate signatures', async () => {
-      await validatorContract.setRequiredSignatures(2)
-      var transactionHash = "0x1045bfe274b88120a6b1e5d01b5ec00ab5d01098346e90e7c7a3c9b8f0181c80";
-      var blockNumber = web3.toBigNumber(217455)
-      var message = createNewSetMessage([accounts[3], accounts[4]], transactionHash, blockNumber, foreignBridge.address);
-      var signature1 = await sign(authorities[0], message);
-      var vrs1 = signatureToVRS(signature1);
-      var signature2 = await sign(authorities[0], message);
-      var vrs2 = signatureToVRS(signature2);
-      false.should.be.equal(await foreignBridge.relayedMessages(transactionHash));
-      await foreignBridge.executeNewSetSignatures([vrs1.v, vrs2.v], [vrs1.r, vrs2.r], [vrs1.s, vrs2.s], message).should.be.rejectedWith(ERROR_MSG);
-      (await validatorContract.validators()).should.be.deep.equal([authorities[0], authorities[1]])
-    })
-  })
-
   describe('#onTokenTransfer', async () => {
     it('can only be called from token contract', async ()=> {
       const owner = accounts[3]
@@ -694,12 +584,12 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       const FOREIGN_MIN_AMOUNT_PER_TX = minPerTx;
       // Validators Contract
       let validatorsProxy = await EternalStorageProxy.new().should.be.fulfilled;
-      const validatorsContractImpl = await ForeignBridgeValidators.new().should.be.fulfilled;
+      const validatorsContractImpl = await BridgeValidators.new().should.be.fulfilled;
       await validatorsProxy.upgradeTo('1', validatorsContractImpl.address).should.be.fulfilled;
       validatorsContractImpl.address.should.be.equal(await validatorsProxy.implementation())
 
-      validatorsProxy = await ForeignBridgeValidators.at(validatorsProxy.address);
-      await validatorsProxy.initialize(VALIDATORS, PROXY_OWNER).should.be.fulfilled;
+      validatorsProxy = await BridgeValidators.at(validatorsProxy.address);
+      await validatorsProxy.initialize(1, VALIDATORS, PROXY_OWNER).should.be.fulfilled;
       // POA20
       let token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
 
