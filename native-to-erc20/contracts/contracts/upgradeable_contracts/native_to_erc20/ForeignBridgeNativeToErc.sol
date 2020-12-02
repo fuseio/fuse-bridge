@@ -54,6 +54,10 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
         erc677token().claimTokens(_token, _to);
     }
 
+    function setValidatorContract(address _validatorContract) external onlyIfOwnerOfProxy {
+        addressStorage[keccak256(abi.encodePacked("validatorContract"))] = _validatorContract;
+    }
+
     function executeSignatures(uint8[] vs, bytes32[] rs, bytes32[] ss, bytes message) external {
         require(Message.isMessageValid(message));
         Message.hasEnoughValidSignaturesForeignBridgeValidator(message, vs, rs, ss, validatorContract());

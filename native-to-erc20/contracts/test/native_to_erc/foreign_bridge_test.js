@@ -639,6 +639,20 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       await storageProxy.upgradeToAndCall('1', foreignBridge.address, data).should.be.fulfilled;
       await storageProxy.transferProxyOwnership(owner).should.be.fulfilled
     })
+
+    it('only proxy owner can call setValidatorContract', async () => {
+      const token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
+      let storageProxy = await EternalStorageProxy.new().should.be.fulfilled;
+      const foreignContract =  await ForeignBridge.new();
+      const data = foreignContract.initialize.request(
+        validatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted).params[0].data
+      await storageProxy.upgradeToAndCall('1', foreignContract.address, data).should.be.fulfilled;
+      await storageProxy.transferProxyOwnership(owner).should.be.fulfilled
+      
+      const foreignBridge = await ForeignBridge.at(storageProxy.address);
+      await foreignBridge.setValidatorContract(validatorContract.address).should.be.fulfilled
+      await foreignBridge.setValidatorContract(validatorContract.address, { from: accounts[1]}).should.be.rejectedWith(ERROR_MSG);
+    })
   })
 
   describe('#claimTokens', async () => {
