@@ -60,6 +60,10 @@ contract HomeBridgeNativeToErc is EternalStorage, BasicBridge, BasicHomeBridge {
         return bytes4(keccak256(abi.encodePacked("native-to-erc-core")));
     }
 
+    function setValidatorContract(address _validatorContract) external onlyIfOwnerOfProxy {
+        addressStorage[keccak256(abi.encodePacked("validatorContract"))] = _validatorContract;
+    }
+
     function onExecuteAffirmation(address _recipient, uint256 _value) internal returns(bool) {
         setTotalExecutedPerDay(getCurrentDay(), totalExecutedPerDay(getCurrentDay()).add(_value));
         if (!_recipient.send(_value)) {
