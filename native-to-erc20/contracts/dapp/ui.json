@@ -1,37 +1,35 @@
 {
 	"version": 1,
-	"production": false,
-	"title": "Native To ERC20 Control Panel",
-	"description": "View and manage some of your Bridge parameters",
+	"production": true,
+	"title": "Native To ERC20 Bridge controls",
+	"description": "View and update Bridge parameters",
+	"constants":{
+		"contractAddress" : {
+			"default" : "0x3014ca10b91cb3D0AD85fEf7A3Cb95BCAc9c0f79",
+			"1" : "0x3014ca10b91cb3D0AD85fEf7A3Cb95BCAc9c0f79",
+			"122" : "0xd617774b9708F79187Dc7F03D3Bdce0a623F6988"
+		}
+	},
 	"image": {
 		"url": "https://upload.wikimedia.org/wikipedia/commons/9/98/Solidity_logo.svg"
 	},
 	"aboutUrl": "https://github.com/fuseio/fuse-bridge/issues/42",
-	"panels": [{
+	"panels": [
+		{
 			"id": "get-gas-price",
 			"title": "Get the current Gas price",
-			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}],
 			"execs": [{
 				"type": "call",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "gasPrice",
 				"saveResultAsInput": "GasPrice"
 			}],
 			"outputs": [{
 				"title": "Gas Price",
 				"type": "int",
-				"scale": "0",
-				"unit": "Tokens",
+				"scale": "-9",
+				"unit": "gwei",
 				"value": "@input[GasPrice]"
 			}]
 		},
@@ -40,25 +38,17 @@
 			"id": "set-gas-price",
 			"title": "Update Gas Price",
 			"inputs": [{
-					"name": "contractAddress",
-					"title": "Token contract address",
-					"type": "address",
-					"validation": [{
-						"type": "allowedTypes",
-						"contract": true,
-						"eoa": true
-					}]
-				},
-				{
 					"name": "_gasPrice",
 					"title": "new gas price",
-					"type": "int"
+					"type": "int",
+					"scale" : "9",
+					"unit" : "gwei"
 				}
 			],
 			"execs": [{
 				"type": "send",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "setGasPrice",
 				"args": {
 					"_gasPrice": "@input[_gasPrice]"
@@ -69,26 +59,18 @@
 		{
 			"id": "get-daily-limit",
 			"title": "Get the daily limit",
-			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}],
 			"execs": [{
 				"type": "call",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "dailyLimit",
 				"saveResultAsInput": "DailyLimit"
 			}],
 			"outputs": [{
 				"title": "Daily Limit",
 				"type": "int",
+				"scale" : "-9",
+				"unit" : "gwei",
 				"value": "@input[DailyLimit]"
 			}]
 		},
@@ -96,26 +78,17 @@
 			"id": "set-daily-limit",
 			"title": "Update Daily Limit",
 			"inputs": [{
-					"name": "contractAddress",
-					"title": "Token contract address",
-					"type": "address",
-					"validation": [{
-						"type": "allowedTypes",
-						"contract": true,
-						"eoa": true
-					}]
-				},
-				{
 					"name": "_dailyLimit",
 					"title": "new daily limit",
 					"type": "int",
-					"scale": "0"
+					"unit" : "gwei",
+					"scale": "9"
 				}
 			],
 			"execs": [{
 				"type": "send",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "setDailyLimit",
 				"args": {
 					"_dailyLimit": "@input[_dailyLimit]"
@@ -124,52 +97,57 @@
 		},
 
 		{
-			"id": "check-withinLimit-withinExecutionLimit",
-			"title": "Check withinLimit and withinExecutionLimit",
+			"id": "check-withinLimit",
+			"title": "Check withinLimit",
 			"inputs": [{
-					"name": "contractAddress",
-					"title": "Token contract address",
-					"type": "address",
-					"validation": [{
-						"type": "allowedTypes",
-						"contract": true,
-						"eoa": true
-					}]
-				},
-				{
-					"name": "_amount",
-					"title": "Amount",
-					"type": "int"
-				}
-			],
+				"name": "_amount",
+				"title": "Amount",
+				"type": "int",
+				"unit" : "gwei",
+				"scale" : "9"
+			}],
 			"execs": [{
 					"type": "call",
 					"contract": "BasicBridge",
-					"address": "@input[contractAddress]",
+					"address": "@constant[contractAddress]",
 					"method": "withinLimit",
 					"args": {
 						"_amount": "@input[_amount]"
 					},
 					"saveResultAsInput": "WithinLimit"
-				},
-				{
+				}
+			],
+			"outputs": [{
+					"title": "Within Limit",
+					"type": "bool",
+					"value": "@input[WithinLimit]"
+				}
+			]
+		},
+
+		{
+			"id": "check-withinExecutionLimit",
+			"title": "Check withinExecutionLimit",
+			"inputs": [{
+					"name": "_amount",
+					"title": "Amount",
+					"type": "int",
+					"unit" : "gwei",
+					"scale" : "9"
+				}
+			],
+			"execs": [{
 					"type": "call",
 					"contract": "BasicBridge",
-					"address": "@input[contractAddress]",
+					"address": "@constant[contractAddress]",
 					"method": "withinExecutionLimit",
 					"args": {
 						"_amount": "@input[_amount]"
 					},
 					"saveResultAsInput": "WithinExecutionLimit"
 				}
-
 			],
 			"outputs": [{
-					"title": "Within Limit",
-					"type": "bool",
-					"value": "@input[WithinLimit]"
-				},
-				{
 					"title": "Within Execution Limit",
 					"type": "bool",
 					"value": "@input[WithinExecutionLimit]"
@@ -180,36 +158,30 @@
 		{
 			"id": "get-execution-limits",
 			"title": "View Execution Limits",
-			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}],
 			"execs": [{
 				"type": "call",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "executionDailyLimit",
 				"saveResultAsInput": "ExecutionDailyLimit"
 			}, {
 				"type": "call",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "executionMaxPerTx",
 				"saveResultAsInput": "ExecutionMaxPerTx"
 			}],
 			"outputs": [{
 				"title": "Execution Daily Limit",
 				"type": "int",
+				"unit" : "gwei",
+				"scale" : "-9",
 				"value": "@input[ExecutionDailyLimit]"
 			}, {
 				"title": "Execution MaxPerTx",
 				"type": "int",
+				"unit" : "gwei",
+				"scale" : "-9",
 				"value": "@input[ExecutionMaxPerTx]"
 			}]
 		},
@@ -218,24 +190,16 @@
 			"id": "set-execution-daily-limit",
 			"title": "Update execution Daily Limit",
 			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}, {
 				"name": "_dailyLimit",
 				"title": "New Execution Daily Limit",
 				"type": "int",
-				"scale": "0"
+				"unit" : "gwei",
+				"scale": "9"
 			}],
 			"execs": [{
 				"type": "send",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "setExecutionDailyLimit",
 				"args": {
 					"_dailyLimit": "@input[_dailyLimit]"
@@ -246,36 +210,30 @@
 		{
 			"id": "view-min-max",
 			"title": "View Min/Max perTx",
-			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}],
 			"execs": [{
 				"type": "call",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "minPerTx",
 				"saveResultAsInput": "MinPerTx"
 			}, {
 				"type": "call",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "maxPerTx",
 				"saveResultAsInput": "MaxPerTx"
 			}],
 			"outputs": [{
 				"title": "minPerTx",
 				"type": "int",
+				"unit" : "gwei",
+				"scale" : "-9",
 				"value": "@input[MinPerTx]"
 			}, {
 				"title": "maxPerTx",
 				"type": "int",
+				"unit" : "gwei",
+				"scale" : "-9",
 				"value": "@input[MaxPerTx]"
 			}]
 		},
@@ -284,23 +242,16 @@
 			"id": "set-minPerTx",
 			"title": "Update MinPerTx",
 			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}, {
 				"name": "_minPerTx",
 				"title": "New MinPerTx",
-				"type": "int"
+				"type": "int",
+				"unit" : "gwei",
+				"scale" : "9"
 			}],
 			"execs": [{
 				"type": "send",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "setMinPerTx",
 				"args": {
 					"_minPerTx": "@input[_minPerTx]"
@@ -312,23 +263,17 @@
 			"id": "set-maxPerTx",
 			"title": "Update MaxPerTx",
 			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}, {
 				"name": "_maxPerTx",
 				"title": "New MaxPerTx",
-				"type": "int"
+				"type": "int",
+				"unit" : "gwei",
+				"scale" : "9"
+
 			}],
 			"execs": [{
 				"type": "send",
 				"contract": "BasicBridge",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "setMaxPerTx",
 				"args": {
 					"_maxPerTx": "@input[_maxPerTx]"
@@ -336,25 +281,13 @@
 			}]
 		},
 
-
-
 		{
 			"id": "get-owner",
 			"title": "Get the contract owner's address",
-			"inputs": [{
-				"name": "contractAddress",
-				"title": "Token contract address",
-				"type": "address",
-				"validation": [{
-					"type": "allowedTypes",
-					"contract": true,
-					"eoa": true
-				}]
-			}],
 			"execs": [{
 				"type": "call",
 				"contract": "EternalOwnable",
-				"address": "@input[contractAddress]",
+				"address": "@constant[contractAddress]",
 				"method": "owner",
 				"saveResultAsInput": "ownerAddress"
 			}],
