@@ -1,0 +1,368 @@
+{
+	"version": 1,
+	"production": false,
+	"title": "Native To ERC20 Control Panel",
+	"description": "View and manage some of your Bridge parameters",
+	"image": {
+		"url": "https://upload.wikimedia.org/wikipedia/commons/9/98/Solidity_logo.svg"
+	},
+	"aboutUrl": "https://github.com/fuseio/fuse-bridge/issues/42",
+	"panels": [{
+			"id": "get-gas-price",
+			"title": "Get the current Gas price",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}],
+			"execs": [{
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "gasPrice",
+				"saveResultAsInput": "GasPrice"
+			}],
+			"outputs": [{
+				"title": "Gas Price",
+				"type": "int",
+				"scale": "0",
+				"unit": "Tokens",
+				"value": "@input[GasPrice]"
+			}]
+		},
+
+		{
+			"id": "set-gas-price",
+			"title": "Update Gas Price",
+			"inputs": [{
+					"name": "contractAddress",
+					"title": "Token contract address",
+					"type": "address",
+					"validation": [{
+						"type": "allowedTypes",
+						"contract": true,
+						"eoa": true
+					}]
+				},
+				{
+					"name": "_gasPrice",
+					"title": "new gas price",
+					"type": "int"
+				}
+			],
+			"execs": [{
+				"type": "send",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "setGasPrice",
+				"args": {
+					"_gasPrice": "@input[_gasPrice]"
+				}
+			}]
+		},
+
+		{
+			"id": "get-daily-limit",
+			"title": "Get the daily limit",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}],
+			"execs": [{
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "dailyLimit",
+				"saveResultAsInput": "DailyLimit"
+			}],
+			"outputs": [{
+				"title": "Daily Limit",
+				"type": "int",
+				"value": "@input[DailyLimit]"
+			}]
+		},
+		{
+			"id": "set-daily-limit",
+			"title": "Update Daily Limit",
+			"inputs": [{
+					"name": "contractAddress",
+					"title": "Token contract address",
+					"type": "address",
+					"validation": [{
+						"type": "allowedTypes",
+						"contract": true,
+						"eoa": true
+					}]
+				},
+				{
+					"name": "_dailyLimit",
+					"title": "new daily limit",
+					"type": "int",
+					"scale": "0"
+				}
+			],
+			"execs": [{
+				"type": "send",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "setDailyLimit",
+				"args": {
+					"_dailyLimit": "@input[_dailyLimit]"
+				}
+			}]
+		},
+
+		{
+			"id": "check-withinLimit-withinExecutionLimit",
+			"title": "Check withinLimit and withinExecutionLimit",
+			"inputs": [{
+					"name": "contractAddress",
+					"title": "Token contract address",
+					"type": "address",
+					"validation": [{
+						"type": "allowedTypes",
+						"contract": true,
+						"eoa": true
+					}]
+				},
+				{
+					"name": "_amount",
+					"title": "Amount",
+					"type": "int"
+				}
+			],
+			"execs": [{
+					"type": "call",
+					"contract": "BasicBridge",
+					"address": "@input[contractAddress]",
+					"method": "withinLimit",
+					"args": {
+						"_amount": "@input[_amount]"
+					},
+					"saveResultAsInput": "WithinLimit"
+				},
+				{
+					"type": "call",
+					"contract": "BasicBridge",
+					"address": "@input[contractAddress]",
+					"method": "withinExecutionLimit",
+					"args": {
+						"_amount": "@input[_amount]"
+					},
+					"saveResultAsInput": "WithinExecutionLimit"
+				}
+
+			],
+			"outputs": [{
+					"title": "Within Limit",
+					"type": "bool",
+					"value": "@input[WithinLimit]"
+				},
+				{
+					"title": "Within Execution Limit",
+					"type": "bool",
+					"value": "@input[WithinExecutionLimit]"
+				}
+			]
+		},
+
+		{
+			"id": "get-execution-limits",
+			"title": "View Execution Limits",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}],
+			"execs": [{
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "executionDailyLimit",
+				"saveResultAsInput": "ExecutionDailyLimit"
+			}, {
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "executionMaxPerTx",
+				"saveResultAsInput": "ExecutionMaxPerTx"
+			}],
+			"outputs": [{
+				"title": "Execution Daily Limit",
+				"type": "int",
+				"value": "@input[ExecutionDailyLimit]"
+			}, {
+				"title": "Execution MaxPerTx",
+				"type": "int",
+				"value": "@input[ExecutionMaxPerTx]"
+			}]
+		},
+
+		{
+			"id": "set-execution-daily-limit",
+			"title": "Update execution Daily Limit",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}, {
+				"name": "_dailyLimit",
+				"title": "New Execution Daily Limit",
+				"type": "int",
+				"scale": "0"
+			}],
+			"execs": [{
+				"type": "send",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "setExecutionDailyLimit",
+				"args": {
+					"_dailyLimit": "@input[_dailyLimit]"
+				}
+			}]
+		},
+
+		{
+			"id": "view-min-max",
+			"title": "View Min/Max perTx",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}],
+			"execs": [{
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "minPerTx",
+				"saveResultAsInput": "MinPerTx"
+			}, {
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "maxPerTx",
+				"saveResultAsInput": "MaxPerTx"
+			}],
+			"outputs": [{
+				"title": "minPerTx",
+				"type": "int",
+				"value": "@input[MinPerTx]"
+			}, {
+				"title": "maxPerTx",
+				"type": "int",
+				"value": "@input[MaxPerTx]"
+			}]
+		},
+
+		{
+			"id": "set-minPerTx",
+			"title": "Update MinPerTx",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}, {
+				"name": "_minPerTx",
+				"title": "New MinPerTx",
+				"type": "int"
+			}],
+			"execs": [{
+				"type": "send",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "setMinPerTx",
+				"args": {
+					"_minPerTx": "@input[_minPerTx]"
+				}
+			}]
+		},
+
+		{
+			"id": "set-maxPerTx",
+			"title": "Update MaxPerTx",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}, {
+				"name": "_maxPerTx",
+				"title": "New MaxPerTx",
+				"type": "int"
+			}],
+			"execs": [{
+				"type": "send",
+				"contract": "BasicBridge",
+				"address": "@input[contractAddress]",
+				"method": "setMaxPerTx",
+				"args": {
+					"_maxPerTx": "@input[_maxPerTx]"
+				}
+			}]
+		},
+
+
+
+		{
+			"id": "get-owner",
+			"title": "Get the contract owner's address",
+			"inputs": [{
+				"name": "contractAddress",
+				"title": "Token contract address",
+				"type": "address",
+				"validation": [{
+					"type": "allowedTypes",
+					"contract": true,
+					"eoa": true
+				}]
+			}],
+			"execs": [{
+				"type": "call",
+				"contract": "EternalOwnable",
+				"address": "@input[contractAddress]",
+				"method": "owner",
+				"saveResultAsInput": "ownerAddress"
+			}],
+			"outputs": [{
+				"title": "Owner's address",
+				"type": "address",
+				"value": "@input[ownerAddress]"
+			}]
+		}
+	]
+}
