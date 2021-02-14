@@ -8,8 +8,8 @@
     "test": "scripts/test.sh",
     "flatten": "scripts/flatten.sh",
     "abi": "scripts/abi.sh",
-    "ui:view" : "solui view --spec contracts/dapp/ui.json --artifacts build/contracts",
-    "ui:build" : "solui publish-folder --spec contracts/dapp/ui.json --artifacts build/contracts --folder build/ui"
+    "ui:view" : "solui view --spec dapp/ui.json --artifacts build/contracts",
+    "ui:build" : "solui publish-folder --spec dapp/ui.json --artifacts build/contracts --folder build/ui"
   },
   "repository": {
     "type": "git",
