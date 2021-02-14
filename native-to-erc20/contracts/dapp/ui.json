@@ -1,8 +1,8 @@
 {
 	"version": 1,
 	"production": true,
-	"title": "Native To ERC20 Bridge controls",
-	"description": "View and update Bridge parameters",
+	"title": "Fuse Native To ERC20 Bridge Controls",
+	"description": "View and update bridge parameters",
 	"constants":{
 		"contractAddress" : {
 			"default" : "0x3014ca10b91cb3D0AD85fEf7A3Cb95BCAc9c0f79",
@@ -11,9 +11,9 @@
 		}
 	},
 	"image": {
-		"url": "https://upload.wikimedia.org/wikipedia/commons/9/98/Solidity_logo.svg"
+		"url": "https://images.emojiterra.com/google/android-nougat/512px/1f309.png"
 	},
-	"aboutUrl": "https://github.com/fuseio/fuse-bridge/issues/42",
+	"aboutUrl": "https://fuse.io/",
 	"panels": [
 		{
 			"id": "get-gas-price",
@@ -35,31 +35,21 @@
 		},
 
 		{
-			"id": "set-gas-price",
-			"title": "Update Gas Price",
-			"inputs": [{
-					"name": "_gasPrice",
-					"title": "new gas price",
-					"type": "int",
-					"scale" : "9",
-					"unit" : "gwei"
-				}
-			],
+			"id": "view-min-max-daily-limits",
+			"title": "View Limits [MinPerTx, MaxPerTx, Daily Limit]",
 			"execs": [{
-				"type": "send",
+				"type": "call",
 				"contract": "BasicBridge",
 				"address": "@constant[contractAddress]",
-				"method": "setGasPrice",
-				"args": {
-					"_gasPrice": "@input[_gasPrice]"
-				}
-			}]
-		},
-
-		{
-			"id": "get-daily-limit",
-			"title": "Get the daily limit",
-			"execs": [{
+				"method": "minPerTx",
+				"saveResultAsInput": "MinPerTx"
+			}, {
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@constant[contractAddress]",
+				"method": "maxPerTx",
+				"saveResultAsInput": "MaxPerTx"
+			},{
 				"type": "call",
 				"contract": "BasicBridge",
 				"address": "@constant[contractAddress]",
@@ -67,34 +57,57 @@
 				"saveResultAsInput": "DailyLimit"
 			}],
 			"outputs": [{
+				"title": "minPerTx",
+				"type": "int",
+				"unit" : "eth",
+				"scale" : "-18",
+				"value": "@input[MinPerTx]"
+			}, {
+				"title": "maxPerTx",
+				"type": "int",
+				"unit" : "eth",
+				"scale" : "-18",
+				"value": "@input[MaxPerTx]"
+			},{
 				"title": "Daily Limit",
 				"type": "int",
-				"scale" : "-9",
-				"unit" : "gwei",
+				"scale" : "-18",
+				"unit" : "eth",
 				"value": "@input[DailyLimit]"
 			}]
 		},
+
 		{
-			"id": "set-daily-limit",
-			"title": "Update Daily Limit",
-			"inputs": [{
-					"name": "_dailyLimit",
-					"title": "new daily limit",
-					"type": "int",
-					"unit" : "gwei",
-					"scale": "9"
-				}
-			],
+			"id": "get-execution-limits",
+			"title": "View Execution Limits",
 			"execs": [{
-				"type": "send",
+				"type": "call",
 				"contract": "BasicBridge",
 				"address": "@constant[contractAddress]",
-				"method": "setDailyLimit",
-				"args": {
-					"_dailyLimit": "@input[_dailyLimit]"
-				}
+				"method": "executionDailyLimit",
+				"saveResultAsInput": "ExecutionDailyLimit"
+			}, {
+				"type": "call",
+				"contract": "BasicBridge",
+				"address": "@constant[contractAddress]",
+				"method": "executionMaxPerTx",
+				"saveResultAsInput": "ExecutionMaxPerTx"
+			}],
+			"outputs": [{
+				"title": "Execution Daily Limit",
+				"type": "int",
+				"unit" : "eth",
+				"scale" : "-18",
+				"value": "@input[ExecutionDailyLimit]"
+			}, {
+				"title": "Execution MaxPerTx",
+				"type": "int",
+				"unit" : "eth",
+				"scale" : "-18",
+				"value": "@input[ExecutionMaxPerTx]"
 			}]
 		},
+
 
 		{
 			"id": "check-withinLimit",
@@ -103,8 +116,8 @@
 				"name": "_amount",
 				"title": "Amount",
 				"type": "int",
-				"unit" : "gwei",
-				"scale" : "9"
+				"unit" : "eth",
+				"scale" : "18"
 			}],
 			"execs": [{
 					"type": "call",
@@ -132,8 +145,8 @@
 					"name": "_amount",
 					"title": "Amount",
 					"type": "int",
-					"unit" : "gwei",
-					"scale" : "9"
+					"unit" : "eth",
+					"scale" : "18"
 				}
 			],
 			"execs": [{
@@ -156,33 +169,46 @@
 		},
 
 		{
-			"id": "get-execution-limits",
-			"title": "View Execution Limits",
+			"id": "set-gas-price",
+			"title": "Update Gas Price",
+			"inputs": [{
+					"name": "_gasPrice",
+					"title": "new gas price",
+					"type": "int",
+					"scale" : "9",
+					"unit" : "gwei"
+				}
+			],
 			"execs": [{
-				"type": "call",
+				"type": "send",
 				"contract": "BasicBridge",
 				"address": "@constant[contractAddress]",
-				"method": "executionDailyLimit",
-				"saveResultAsInput": "ExecutionDailyLimit"
-			}, {
-				"type": "call",
+				"method": "setGasPrice",
+				"args": {
+					"_gasPrice": "@input[_gasPrice]"
+				}
+			}]
+		},
+
+		{
+			"id": "set-daily-limit",
+			"title": "Update Daily Limit",
+			"inputs": [{
+					"name": "_dailyLimit",
+					"title": "new daily limit",
+					"type": "int",
+					"unit" : "eth",
+					"scale": "18"
+				}
+			],
+			"execs": [{
+				"type": "send",
 				"contract": "BasicBridge",
 				"address": "@constant[contractAddress]",
-				"method": "executionMaxPerTx",
-				"saveResultAsInput": "ExecutionMaxPerTx"
-			}],
-			"outputs": [{
-				"title": "Execution Daily Limit",
-				"type": "int",
-				"unit" : "gwei",
-				"scale" : "-9",
-				"value": "@input[ExecutionDailyLimit]"
-			}, {
-				"title": "Execution MaxPerTx",
-				"type": "int",
-				"unit" : "gwei",
-				"scale" : "-9",
-				"value": "@input[ExecutionMaxPerTx]"
+				"method": "setDailyLimit",
+				"args": {
+					"_dailyLimit": "@input[_dailyLimit]"
+				}
 			}]
 		},
 
@@ -193,8 +219,8 @@
 				"name": "_dailyLimit",
 				"title": "New Execution Daily Limit",
 				"type": "int",
-				"unit" : "gwei",
-				"scale": "9"
+				"unit" : "eth",
+				"scale": "18"
 			}],
 			"execs": [{
 				"type": "send",
@@ -208,45 +234,14 @@
 		},
 
 		{
-			"id": "view-min-max",
-			"title": "View Min/Max perTx",
-			"execs": [{
-				"type": "call",
-				"contract": "BasicBridge",
-				"address": "@constant[contractAddress]",
-				"method": "minPerTx",
-				"saveResultAsInput": "MinPerTx"
-			}, {
-				"type": "call",
-				"contract": "BasicBridge",
-				"address": "@constant[contractAddress]",
-				"method": "maxPerTx",
-				"saveResultAsInput": "MaxPerTx"
-			}],
-			"outputs": [{
-				"title": "minPerTx",
-				"type": "int",
-				"unit" : "gwei",
-				"scale" : "-9",
-				"value": "@input[MinPerTx]"
-			}, {
-				"title": "maxPerTx",
-				"type": "int",
-				"unit" : "gwei",
-				"scale" : "-9",
-				"value": "@input[MaxPerTx]"
-			}]
-		},
-
-		{
 			"id": "set-minPerTx",
 			"title": "Update MinPerTx",
 			"inputs": [{
 				"name": "_minPerTx",
 				"title": "New MinPerTx",
 				"type": "int",
-				"unit" : "gwei",
-				"scale" : "9"
+				"unit" : "eth",
+				"scale" : "18"
 			}],
 			"execs": [{
 				"type": "send",
@@ -266,8 +261,8 @@
 				"name": "_maxPerTx",
 				"title": "New MaxPerTx",
 				"type": "int",
-				"unit" : "gwei",
-				"scale" : "9"
+				"unit" : "eth",
+				"scale" : "18"
 
 			}],
 			"execs": [{
@@ -278,23 +273,6 @@
 				"args": {
 					"_maxPerTx": "@input[_maxPerTx]"
 				}
-			}]
-		},
-
-		{
-			"id": "get-owner",
-			"title": "Get the contract owner's address",
-			"execs": [{
-				"type": "call",
-				"contract": "EternalOwnable",
-				"address": "@constant[contractAddress]",
-				"method": "owner",
-				"saveResultAsInput": "ownerAddress"
-			}],
-			"outputs": [{
-				"title": "Owner's address",
-				"type": "address",
-				"value": "@input[ownerAddress]"
 			}]
 		}
 	]
