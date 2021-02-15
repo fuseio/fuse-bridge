@@ -7,7 +7,9 @@
     "compile": "truffle compile",
     "test": "scripts/test.sh",
     "flatten": "scripts/flatten.sh",
-    "abi": "scripts/abi.sh"
+    "abi": "scripts/abi.sh",
+    "ui:view" : "solui view --spec dapp/ui.json --artifacts build/contracts",
+    "ui:build" : "solui publish-folder --spec dapp/ui.json --artifacts build/contracts --folder build/ui"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,7 @@
     "web3-utils": "^1.0.0-beta.34"
   },
   "devDependencies": {
+    "@solui/cli": "^1.21.1",
     "chai": "^4.2.0",
     "chai-as-promised": "^7.1.1",
     "chai-bignumber": "^3.0.0",
