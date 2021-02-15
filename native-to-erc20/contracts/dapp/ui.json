@@ -59,20 +59,20 @@
 			"outputs": [{
 				"title": "minPerTx",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale" : "-18",
 				"value": "@input[MinPerTx]"
 			}, {
 				"title": "maxPerTx",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale" : "-18",
 				"value": "@input[MaxPerTx]"
 			},{
 				"title": "Daily Limit",
 				"type": "int",
 				"scale" : "-18",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"value": "@input[DailyLimit]"
 			}]
 		},
@@ -96,13 +96,13 @@
 			"outputs": [{
 				"title": "Execution Daily Limit",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale" : "-18",
 				"value": "@input[ExecutionDailyLimit]"
 			}, {
 				"title": "Execution MaxPerTx",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale" : "-18",
 				"value": "@input[ExecutionMaxPerTx]"
 			}]
@@ -116,7 +116,7 @@
 				"name": "_amount",
 				"title": "Amount",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale" : "18"
 			}],
 			"execs": [{
@@ -145,7 +145,7 @@
 					"name": "_amount",
 					"title": "Amount",
 					"type": "int",
-					"unit" : "eth",
+					"unit" : "Fuse",
 					"scale" : "18"
 				}
 			],
@@ -197,7 +197,7 @@
 					"name": "_dailyLimit",
 					"title": "new daily limit",
 					"type": "int",
-					"unit" : "eth",
+					"unit" : "Fuse",
 					"scale": "18"
 				}
 			],
@@ -219,7 +219,7 @@
 				"name": "_dailyLimit",
 				"title": "New Execution Daily Limit",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale": "18"
 			}],
 			"execs": [{
@@ -240,7 +240,7 @@
 				"name": "_minPerTx",
 				"title": "New MinPerTx",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale" : "18"
 			}],
 			"execs": [{
@@ -261,7 +261,7 @@
 				"name": "_maxPerTx",
 				"title": "New MaxPerTx",
 				"type": "int",
-				"unit" : "eth",
+				"unit" : "Fuse",
 				"scale" : "18"
 
 			}],
