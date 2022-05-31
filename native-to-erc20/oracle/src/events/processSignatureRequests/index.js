@@ -46,6 +46,10 @@ function processSignatureRequestsBuilder (config) {
       limit(async () => {
         const { recipient, value, data } = signatureRequest.returnValues
 
+        const logger = rootLogger.child({
+          eventTransactionHash: signatureRequest.transactionHash
+        })
+
         if(USE_CALATA === 'TRUE'){
           logger.debug('Checking Calata score')
           if(getCalataScore(recipient) === false){
@@ -55,10 +59,6 @@ function processSignatureRequestsBuilder (config) {
             logger.info('Passed Calata check')
           }
         }
-
-        const logger = rootLogger.child({
-          eventTransactionHash: signatureRequest.transactionHash
-        })
 
         logger.info({ sender: recipient, value, data }, `Processing signatureRequest ${signatureRequest.transactionHash}`)
 
