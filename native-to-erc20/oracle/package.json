@@ -13,7 +13,8 @@
     "dev": "concurrently -n 'watcher:signature-request,watcher:collected-signatures,watcher:affirmation-request,watcher:rewarded-on-cycle,watcher:initiate-change,sender:home,sender:foreign' -c 'green,yellow,blue,magenta,cyan,white,gray' 'npm run watcher:signature-request' 'npm run watcher:collected-signatures' 'npm run watcher:affirmation-request' 'npm run watcher:rewarded-on-cycle' 'npm run watcher:initiate-change' 'npm run sender:home' 'npm run sender:foreign'",
     "lint": "./node_modules/.bin/standard",
     "test": "NODE_ENV=test mocha",
-    "postinstall": "mkdir -p logs"
+    "postinstall": "mkdir -p logs",
+    "calata:check": "node ./src/services/calata.js"
   },
   "repository": {
     "type": "git",
