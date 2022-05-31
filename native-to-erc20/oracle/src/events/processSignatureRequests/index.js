@@ -4,6 +4,7 @@ const { HttpListProviderError } = require('http-list-provider')
 const homeBridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home } = require('../../services/web3')
+const { getCalataScore } = require('../../services/calata')
 const { createMessage } = require('../../utils/message')
 const estimateGas = require('./estimateGas')
 const {
@@ -13,7 +14,7 @@ const {
 } = require('../../utils/errors')
 const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
-const { VALIDATOR_ADDRESS_PRIVATE_KEY } = process.env
+const { VALIDATOR_ADDRESS_PRIVATE_KEY, USE_CALATA } = process.env
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
@@ -44,6 +45,16 @@ function processSignatureRequestsBuilder (config) {
     const callbacks = signatureRequests.map(signatureRequest =>
       limit(async () => {
         const { recipient, value, data } = signatureRequest.returnValues
+
+        if(USE_CALATA === 'TRUE'){
+          logger.debug('Checking Calata score')
+          if(getCalataScore(recipient) === false){
+            logger.error(`Calata: ${recipient} failed Calata check.`)
+            return
+          } else {
+            logger.info('Passed Calata check')
+          }
+        }
 
         const logger = rootLogger.child({
           eventTransactionHash: signatureRequest.transactionHash
