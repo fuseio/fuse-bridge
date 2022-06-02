@@ -51,9 +51,17 @@ function processSignatureRequestsBuilder (config) {
           eventTransactionHash: signatureRequest.transactionHash
         })
 
+        
         if (boolean(USE_CALATA) === true) {
           logger.debug('Checking Calata score')
-          if (getCalataScore(recipient) === false) {
+          let calataScore;
+          try {
+            calataScore = getCalataScore(recipient)
+          } catch (e) {
+            logger.fatal(e, `Error while checking Calata score for ${recipient}`)
+            return
+          }
+          if (calataScore === false) {
             logger.error(`Calata: ${recipient} failed Calata check.`)
             return
           } else {
