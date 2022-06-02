@@ -1,4 +1,5 @@
 require('dotenv').config()
+const { boolean } = require('boolean')
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
 const homeBridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
@@ -50,9 +51,9 @@ function processSignatureRequestsBuilder (config) {
           eventTransactionHash: signatureRequest.transactionHash
         })
 
-        if(USE_CALATA === 'TRUE'){
+        if (boolean(USE_CALATA) === true) {
           logger.debug('Checking Calata score')
-          if(getCalataScore(recipient) === false){
+          if (getCalataScore(recipient) === false) {
             logger.error(`Calata: ${recipient} failed Calata check.`)
             return
           } else {

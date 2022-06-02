@@ -1,4 +1,5 @@
 require('dotenv').config()
+const { isBooleanable } = require('boolean')
 const fetch = require('node-fetch')
 const {
     CALATA_SCORE_URL,
@@ -11,7 +12,7 @@ async function getCalataScore(address){
         headers: new fetch.Headers({ Authorization: CALATA_AUTH_TOKEN })
     })
     const json = await response.json()
-    if(response.status !== 200 || json['Score'] !== true && json['Score'] !== false){
+    if (response.status !== 200 || !isBooleanable(json['Score'])) {
         throw new Error('Calata: API returned an invalid response')
     }
     return json['Score']
