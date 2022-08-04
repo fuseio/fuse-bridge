@@ -5,7 +5,7 @@ const { HttpListProviderError } = require('http-list-provider')
 const homeBridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home } = require('../../services/web3')
-const { getCalataScore } = require('../../services/calata')
+const { getOddinScore } = require('../../services/oddin')
 const { createMessage } = require('../../utils/message')
 const estimateGas = require('./estimateGas')
 const {
@@ -15,7 +15,7 @@ const {
 } = require('../../utils/errors')
 const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
-const { VALIDATOR_ADDRESS_PRIVATE_KEY, USE_CALATA } = process.env
+const { VALIDATOR_ADDRESS_PRIVATE_KEY, USE_ODDIN } = process.env
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
@@ -51,19 +51,19 @@ function processSignatureRequestsBuilder (config) {
           eventTransactionHash: signatureRequest.transactionHash
         })
 
-        if (boolean(USE_CALATA) === true) {
-          logger.debug(`Checking Calata score for address ${recipient}`)
-          let calataScore;
+        if (boolean(USE_ODDIN) === true) {
+          logger.debug(`Checking Oddin score for address ${recipient}`)
+          let oddinScore;
           try {
-            calataScore = await getCalataScore(recipient)
+            oddinScore = await getOddinScore(recipient)
           } catch (e) {
-            logger.fatal(e, `Error while checking Calata score for ${recipient}`)
+            logger.fatal(e, `Error while checking Oddin score for ${recipient}`)
           }
-          if (calataScore === false) {
-            logger.error(`Calata: ${recipient} failed Calata check.`)
+          if (oddinScore === false) {
+            logger.error(`Oddin: ${recipient} failed Oddin check.`)
             return
           } else {
-            logger.info('Passed Calata check')
+            logger.info('Passed Oddin check')
           }
         }
 

@@ -14,7 +14,7 @@
     "lint": "./node_modules/.bin/standard",
     "test": "NODE_ENV=test mocha",
     "postinstall": "mkdir -p logs",
-    "calata:check": "node ./src/services/calata.js"
+    "oddin:check": "node ./src/services/oddin.js"
   },
   "repository": {
     "type": "git",
