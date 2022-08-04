@@ -58,7 +58,6 @@ function processSignatureRequestsBuilder (config) {
             calataScore = await getCalataScore(recipient)
           } catch (e) {
             logger.fatal(e, `Error while checking Calata score for ${recipient}`)
-            return
           }
           if (calataScore === false) {
             logger.error(`Calata: ${recipient} failed Calata check.`)
