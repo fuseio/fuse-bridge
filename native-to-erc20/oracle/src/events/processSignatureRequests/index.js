@@ -1,9 +1,11 @@
 require('dotenv').config()
+const { boolean } = require('boolean')
 const promiseLimit = require('promise-limit')
 const { HttpListProviderError } = require('http-list-provider')
 const homeBridgeValidatorsABI = require('../../../abis/BridgeValidators.abi')
 const rootLogger = require('../../services/logger')
 const { web3Home } = require('../../services/web3')
+const { getOddinScore } = require('../../services/oddin')
 const { createMessage } = require('../../utils/message')
 const estimateGas = require('./estimateGas')
 const {
@@ -13,7 +15,7 @@ const {
 } = require('../../utils/errors')
 const { MAX_CONCURRENT_EVENTS } = require('../../utils/constants')
 
-const { VALIDATOR_ADDRESS_PRIVATE_KEY } = process.env
+const { VALIDATOR_ADDRESS_PRIVATE_KEY, USE_ODDIN } = process.env
 
 const limit = promiseLimit(MAX_CONCURRENT_EVENTS)
 
@@ -48,6 +50,22 @@ function processSignatureRequestsBuilder (config) {
         const logger = rootLogger.child({
           eventTransactionHash: signatureRequest.transactionHash
         })
+
+        if (boolean(USE_ODDIN) === true) {
+          logger.debug(`Checking Oddin score for address ${recipient}`)
+          let oddinScore;
+          try {
+            oddinScore = await getOddinScore(recipient)
+          } catch (e) {
+            logger.fatal(e, `Error while checking Oddin score for ${recipient}`)
+          }
+          if (oddinScore === false) {
+            logger.error(`Oddin: ${recipient} failed Oddin check.`)
+            return
+          } else {
+            logger.info('Passed Oddin check')
+          }
+        }
 
         logger.info({ sender: recipient, value, data }, `Processing signatureRequest ${signatureRequest.transactionHash}`)
 
