@@ -702,4 +702,20 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       '150'.should.be.bignumber.equal(await tokenSecond.balanceOf(accounts[3]))
     })
   })
+
+  describe('#addMinterRole', async () => {
+    it('can add minter role', async () => {
+      const owner = accounts[0];
+      token = await POA20.new("POA ERC20 Foundation", "POA20", 18);
+      const foreignBridgeImpl = await ForeignBridge.new();
+      const storageProxy = await EternalStorageProxy.new().should.be.fulfilled;
+      await storageProxy.upgradeTo('1', foreignBridgeImpl.address).should.be.fulfilled
+      const foreignBridge = await ForeignBridge.at(storageProxy.address);
+      await foreignBridge.initialize(validatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted);
+      await token.transferOwnership(foreignBridge.address)
+
+      await foreignBridge.addMinterRole(accounts[1], {from: owner}).should.be.fulfilled;
+      true.should.be.equal(await token.isMinter(accounts[1]))
+    })
+  })
 })
