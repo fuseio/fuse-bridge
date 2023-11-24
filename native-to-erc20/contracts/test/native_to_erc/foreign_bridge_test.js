@@ -713,8 +713,8 @@ contract('ForeignBridge_Native_to_ERC20', async (accounts) => {
       const foreignBridge = await ForeignBridge.at(storageProxy.address);
       await foreignBridge.initialize(validatorContract.address, token.address, oneEther, halfEther, minPerTx, gasPrice, requireBlockConfirmations, homeDailyLimit, homeMaxPerTx, owner, erc677tokenPreMinted);
       await token.transferOwnership(foreignBridge.address)
-
-      await foreignBridge.addMinterRole(accounts[1], {from: owner}).should.be.fulfilled;
+      await token.addMinter(foreignBridge.address, {from: owner}).should.be.fulfilled;
+      await foreignBridge.addMinter(accounts[1], {from: owner}).should.be.fulfilled;
       true.should.be.equal(await token.isMinter(accounts[1]))
     })
   })
