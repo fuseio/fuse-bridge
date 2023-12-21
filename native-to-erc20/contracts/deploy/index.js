@@ -6,7 +6,7 @@ async function main() {
   const deployHome = require('./src/native_to_erc20/home')
   const deployForeign = require('./src/native_to_erc20/foreign')
 
-  const { homeBridge } = await deployHome()
+  // const { homeBridge } = await deployHome()
   const { foreignBridge, erc677 } = await deployForeign()
 
   console.log('\nDeployment has been completed.\n\n')
@@ -31,5 +31,7 @@ async function main() {
   )
   console.log('Contracts Deployment have been saved to `bridgeDeploymentResults.json`')
 }
+
+
 
 main().catch(e => console.error('Error:', e))

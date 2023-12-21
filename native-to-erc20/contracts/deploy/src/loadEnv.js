@@ -17,6 +17,7 @@ const addressesValidator = envalid.makeValidator(addresses => {
 })
 
 const { USE_EXISTING_TOKEN } = process.env
+const { UPGRADE_FOREIGN } = process.env
 
 let validations = {
   DEPLOYMENT_ACCOUNT_PRIVATE_KEY: envalid.str(),
@@ -58,6 +59,13 @@ if (USE_EXISTING_TOKEN == 'true') {
     BRIDGEABLE_TOKEN_DECIMALS: envalid.num(),
     BRIDGEABLE_TOKEN_PRE_MINTED: envalid.bool(),
     BRIDGEABLE_TOKEN_INITIAL_SUPPLY_ETH: envalid.num()
+  }
+}
+
+if(UPGRADE_FOREIGN == 'true') {
+  validations = {
+    ...validations,
+    FOREIGN_BRIDGE_STORAGE_ADDRESS: addressValidator()
   }
 }
 

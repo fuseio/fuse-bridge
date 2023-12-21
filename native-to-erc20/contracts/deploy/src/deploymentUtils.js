@@ -54,6 +54,23 @@ async function deployContract(contractJson, args, { from, network, nonce }) {
   return instance
 }
 
+async function getContract(contractJson, address, network) {
+  let web3
+  let url
+  let gasPrice
+  if (network === 'foreign') {
+    web3 = web3Foreign
+    url = FOREIGN_RPC_URL
+    gasPrice = FOREIGN_DEPLOYMENT_GAS_PRICE
+  } else {
+    web3 = web3Home
+    url = HOME_RPC_URL
+    gasPrice = HOME_DEPLOYMENT_GAS_PRICE
+  }
+  const instance = new web3.eth.Contract(contractJson.abi, address)
+  return instance
+}
+
 async function sendRawTxHome(options) {
   return sendRawTx({
     ...options,
@@ -151,5 +168,6 @@ module.exports = {
   sendRawTx,
   sendRawTxHome,
   sendRawTxForeign,
-  privateKeyToAddress
+  privateKeyToAddress,
+  getContract
 }
