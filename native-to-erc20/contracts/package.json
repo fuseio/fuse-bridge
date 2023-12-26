@@ -8,8 +8,8 @@
     "test": "scripts/test.sh",
     "flatten": "scripts/flatten.sh",
     "abi": "scripts/abi.sh",
-    "ui:view" : "solui view --spec dapp/ui.json --artifacts build/contracts",
-    "ui:build" : "solui publish-folder --spec dapp/ui.json --artifacts build/contracts --folder build/ui"
+    "ui:view": "solui view --spec dapp/ui.json --artifacts build/contracts",
+    "ui:build": "solui publish-folder --spec dapp/ui.json --artifacts build/contracts --folder build/ui"
   },
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
   "dependencies": {
     "ganache-cli": "^6.7.0",
     "openzeppelin-solidity": "2.0.1",
+    "solc": "^0.4.24",
     "truffle": "4.1.11",
     "web3-utils": "^1.0.0-beta.34"
   },

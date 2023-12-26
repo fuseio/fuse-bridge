@@ -99,4 +99,8 @@ contract ForeignBridgeNativeToErc is ERC677Receiver, BasicBridge, BasicForeignBr
     function onFailedMessage(address, uint256, bytes32) internal {
         revert();
     }
+
+    function addMinter(address _minter) external onlyIfOwnerOfProxy {
+        erc677token().addMinter(_minter);
+    }
 }
